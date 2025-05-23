@@ -1,0 +1,161 @@
+{% extends 'layout.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-cog me-2"></i> Admin Dashboard
+    </h1>
+</div>
+
+<!-- Status Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Users</h6>
+                        <h2 class="mt-2 mb-0">{{ user_count }}</h2>
+                        <p class="text-muted">{{ active_user_count }} active</p>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-users text-primary fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('admin.user_list') }}" class="text-muted">View all <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Groups</h6>
+                        <h2 class="mt-2 mb-0">{{ group_count }}</h2>
+                        <p class="text-muted">User groups</p>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-user-friends text-info fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('admin.group_list') }}" class="text-muted">View all <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">System Settings</h6>
+                        <h2 class="mt-2 mb-0"><i class="fas fa-sliders-h"></i></h2>
+                        <p class="text-muted">Configuration</p>
+                    </div>
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-cogs text-secondary fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('admin.settings') }}" class="text-muted">View settings <i class="fas fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin.create_user') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-plus me-2"></i> Add New User
+                    </a>
+                    <a href="{{ url_for('admin.create_group') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users-cog me-2"></i> Create New Group
+                    </a>
+                    <a href="{{ url_for('admin.settings') }}#smtp-settings" class="list-group-item list-group-item-action">
+                        <i class="fas fa-envelope me-2"></i> Configure SMTP Settings
+                    </a>
+                    <a href="{{ url_for('asset.export_assets') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-export me-2"></i> Export All Assets
+                    </a>
+                    <a href="{{ url_for('asset.create_asset') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle me-2"></i> Add New Asset
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">System Information</h5>
+            </div>
+            <div class="card-body">
+        
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Current Time</div>
+                    <div id="current-time"></div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Database Status</div>
+                    <div><span class="badge bg-success">Connected</span></div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Email Notifications</div>
+                    <div>
+                        {% if config.MAIL_SERVER and config.MAIL_USERNAME %}
+                        <span class="badge bg-success">Configured</span>
+                        {% else %}
+                        <span class="badge bg-warning">Not Configured</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Registration</div>
+                    <div>
+                        {% if config.ALLOW_REGISTRATION %}
+                        <span class="badge bg-success">Enabled</span>
+                        {% else %}
+                        <span class="badge bg-danger">Disabled</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleString();
+        }
+        
+        // Update time immediately and then every second
+        updateTime();
+        setInterval(updateTime, 1000);
+    });
+</script>
+{% endblock %}

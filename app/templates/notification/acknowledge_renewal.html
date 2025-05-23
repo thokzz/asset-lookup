@@ -1,0 +1,59 @@
+<!-- app/templates/notification/acknowledge_renewal.html -->
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Warranty Renewal Recorded</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h4 class="alert-heading">Renewal Complete!</h4>
+                        <p>The warranty renewal has been recorded successfully.</p>
+                    </div>
+                    
+                    <h5>Updated Asset Information</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 30%">Asset Name</th>
+                                    <td>{{ asset.product_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Model</th>
+                                    <td>{{ asset.product_model }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Serial Number</th>
+                                    <td>{{ asset.serial_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>New Warranty Duration</th>
+                                    <td>{{ asset.warranty_duration }} months</td>
+                                </tr>
+                                <tr>
+                                    <th>New Warranty Expiry Date</th>
+                                    <td>{{ asset.warranty_expiry_date.strftime('%B %d, %Y') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <p>The warranty information has been updated in the system. No further expiration notifications will be sent until closer to the new expiry date.</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-primary">View Asset Details</a>
+                        <a href="{{ url_for('asset.dashboard') }}" class="btn btn-secondary">Return to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

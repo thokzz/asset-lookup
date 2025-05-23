@@ -1,0 +1,83 @@
+<!-- app/templates/notification/acknowledge.html -->
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Response Recorded</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h4 class="alert-heading">Thank you!</h4>
+                        <p>Your response has been recorded successfully.</p>
+                    </div>
+                    
+                    <h5>Asset Information</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 30%">Asset Name</th>
+                                    <td>{{ asset.product_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Model</th>
+                                    <td>{{ asset.product_model }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Serial Number</th>
+                                    <td>{{ asset.serial_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Warranty Expiry Date</th>
+                                    <td>{{ asset.warranty_expiry_date.strftime('%B %d, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Your Response</th>
+                                    <td>
+                                        {% if action == 'renewed' %}
+                                        <span class="badge bg-success">Warranty Has Been Renewed</span>
+                                        {% elif action == 'will_not_renew' %}
+                                        <span class="badge bg-danger">Will Not Renew</span>
+                                        {% elif action == 'pending' %}
+                                        <span class="badge bg-warning">Action Pending</span>
+                                        {% elif action == 'disable_notifications' %}
+                                        <span class="badge bg-secondary">Notifications Disabled</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if action == 'renewed' %}
+                    <div class="alert alert-info">
+                        <p>Your warranty renewal has been recorded. Thank you for updating this information.</p>
+                    </div>
+                    {% elif action == 'will_not_renew' %}
+                    <div class="alert alert-warning">
+                        <p>You have indicated that this warranty will not be renewed. No further notifications will be sent.</p>
+                    </div>
+                    {% elif action == 'pending' %}
+                    <div class="alert alert-warning">
+                        <p>You have indicated that action is pending on this warranty. You will continue to receive notifications based on your notification preferences.</p>
+                    </div>
+                    {% elif action == 'disable_notifications' %}
+                    <div class="alert alert-secondary">
+                        <p>Notifications have been disabled for this asset. You will no longer receive warranty expiration alerts for it.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-primary">View Asset Details</a>
+                        <a href="{{ url_for('asset.dashboard') }}" class="btn btn-secondary">Return to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends 'layout.html' %}
+
+{% block title %}Tags{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tags me-2"></i> Tags
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createTagModal">
+            <i class="fas fa-plus me-1"></i> Add Tag
+        </button>
+    </div>
+</div>
+
+<!-- Tag List -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tag</th>
+                        <th>Color</th>
+                        <th>Assets</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tag in tags %}
+                    <tr>
+                        <td>
+                            <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                        </td>
+                        <td>
+                            <code>{{ tag.color }}</code>
+                            <div class="d-inline-block rounded-circle" style="width: 20px; height: 20px; background-color: {{ tag.color }}; vertical-align: middle;"></div>
+                        </td>
+                        <td>{{ tag.assets.count() }}</td>
+                        <td>{{ tag.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                    data-bs-toggle="modal" data-bs-target="#editTagModal{{ tag.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteTagModal{{ tag.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Edit Tag Modal -->
+                            <div class="modal fade" id="editTagModal{{ tag.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Edit Tag</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form action="{{ url_for('asset.edit_tag', tag_id=tag.id) }}" method="post">
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="name{{ tag.id }}" class="form-label">Tag Name</label>
+                                                    <input type="text" class="form-control" id="name{{ tag.id }}" name="name" value="{{ tag.name }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="color{{ tag.id }}" class="form-label">Color</label>
+                                                    <input type="color" class="form-control form-control-color" id="color{{ tag.id }}" name="color" value="{{ tag.color }}" title="Choose tag color">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Preview</label>
+                                                    <div>
+                                                        <span class="badge preview-badge-{{ tag.id }}" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Delete Tag Modal -->
+                            <div class="modal fade" id="deleteTagModal{{ tag.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete the tag <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>?
+                                            This will remove the tag from all associated assets.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('asset.delete_tag', tag_id=tag.id) }}" method="post">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i> No tags found
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Tag Modal -->
+<div class="modal fade" id="createTagModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('asset.create_tag') }}" method="post" id="tagForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tagName" class="form-label">Tag Name</label>
+                        <input type="text" class="form-control" id="tagName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tagColor" class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color" id="tagColor" name="color" value="#6c757d" title="Choose tag color">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Preview</label>
+                        <div>
+                            <span class="badge" id="tagPreview" style="background-color: #6c757d">Tag Preview</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Tag</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Preview for new tag
+        const tagNameInput = document.getElementById('tagName');
+        const tagColorInput = document.getElementById('tagColor');
+        const tagPreview = document.getElementById('tagPreview');
+        
+        function updateNewTagPreview() {
+            tagPreview.textContent = tagNameInput.value || 'Tag Preview';
+            tagPreview.style.backgroundColor = tagColorInput.value;
+        }
+        
+        tagNameInput.addEventListener('input', updateNewTagPreview);
+        tagColorInput.addEventListener('input', updateNewTagPreview);
+        
+        // Preview for editing existing tags
+        {% for tag in tags %}
+        const nameInput{{ tag.id }} = document.getElementById('name{{ tag.id }}');
+        const colorInput{{ tag.id }} = document.getElementById('color{{ tag.id }}');
+        const preview{{ tag.id }} = document.querySelector('.preview-badge-{{ tag.id }}');
+        
+        if (nameInput{{ tag.id }} && colorInput{{ tag.id }} && preview{{ tag.id }}) {
+            nameInput{{ tag.id }}.addEventListener('input', function() {
+                preview{{ tag.id }}.textContent = this.value;
+            });
+            
+            colorInput{{ tag.id }}.addEventListener('input', function() {
+                preview{{ tag.id }}.style.backgroundColor = this.value;
+            });
+        }
+        {% endfor %}
+    });
+</script>
+{% endblock %}

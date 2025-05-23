@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    image: asset-lookup:latest
+    container_name: asset-lookup-web
+    ports:
+      - "3443:5000"
+    volumes:
+      - ./app:/app/app
+      - ./uploads:/app/app/static/uploads
+      - ./logs:/app/logs
+      - ./instance:/app/instance  # Ensure this line exists
+    environment:
+      - FLASK_APP=run.py
+      - DATABASE_URL=sqlite:////app/instance/asset_lookup.db
+      - SECRET_KEY=change_this_for_production
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=5000
+      - EXTERNAL_URL=htts://yourwebsitewherethisserverishosted.com  # Add this line for proper URL generation in emails
+    restart: unless-stopped

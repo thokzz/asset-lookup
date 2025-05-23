@@ -1,0 +1,559 @@
+<!-- app/templates/notification/admin_settings.html - Updated with pagination -->
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-bell-slash me-2"></i> System-wide Notification Settings
+                </h1>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Default Notification Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>System Defaults:</strong> These settings apply to all users by default. Individual users can override these settings in their notification preferences.
+                    </div>
+                    
+                    <form method="POST">
+                        <!-- Initial Alert Settings -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-bell me-2 text-primary"></i>
+                                    Initial Alert Settings
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="initial_alert_enabled" name="initial_alert_enabled" 
+                                                      {% if settings.initial_alert_enabled %}checked{% endif %}>
+                                                <label class="form-check-label" for="initial_alert_enabled">
+                                                    <strong>Enable Initial Alerts</strong>
+                                                </label>
+                                            </div>
+                                            <div class="form-text">Send the first notification when assets enter the alert period</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="initial_alert_days" class="form-label">Days Before Expiry</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="initial_alert_days" name="initial_alert_days" 
+                                                       value="{{ settings.initial_alert_days or 30 }}" min="1" max="365">
+                                                <span class="input-group-text">days</span>
+                                            </div>
+                                            <div class="form-text">How many days before warranty expiry to send the initial alert</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="initial_alert_time" class="form-label">Initial Alert Time</label>
+                                            <input type="time" class="form-control" id="initial_alert_time" name="initial_alert_time" 
+                                                   value="{{ settings.initial_alert_time or '09:00' }}">
+                                            <div class="form-text">Time of day to send initial alerts (24-hour format)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Secondary Alert Settings -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-bell me-2 text-warning"></i>
+                                    Secondary Alert Settings
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="secondary_alert_enabled" name="secondary_alert_enabled" 
+                                                      {% if settings.secondary_alert_enabled %}checked{% endif %}>
+                                                <label class="form-check-label" for="secondary_alert_enabled">
+                                                    <strong>Enable Secondary Alerts</strong>
+                                                </label>
+                                            </div>
+                                            <div class="form-text">Send follow-up notifications as expiry approaches</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="secondary_alert_days" class="form-label">Secondary Alert Trigger</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="secondary_alert_days" name="secondary_alert_days" 
+                                                       value="{{ settings.secondary_alert_days or 15 }}" min="1" max="365">
+                                                <span class="input-group-text">days</span>
+                                            </div>
+                                            <div class="form-text">Days before expiry when secondary alerts begin</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="secondary_frequency" class="form-label">Secondary Alert Frequency</label>
+                                            <select class="form-select" id="secondary_frequency" name="secondary_frequency">
+                                                <option value="daily" {% if settings.secondary_frequency == 'daily' %}selected{% endif %}>Daily</option>
+                                                <option value="twice_daily" {% if settings.secondary_frequency == 'twice_daily' %}selected{% endif %}>Twice Daily</option>
+                                                <option value="weekly" {% if settings.secondary_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                                                <option value="custom" {% if settings.secondary_frequency == 'custom' %}selected{% endif %}>Custom Interval</option>
+                                            </select>
+                                            <div class="form-text">How often to send secondary alerts</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="secondary_alert_time" class="form-label">Secondary Alert Time</label>
+                                            <input type="time" class="form-control" id="secondary_alert_time" name="secondary_alert_time" 
+                                                   value="{{ settings.secondary_alert_time or '09:00' }}">
+                                            <div class="form-text">Time of day to send secondary alerts</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom Interval Settings -->
+                                <div class="row" id="customIntervalSettings" style="display: none;">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="secondary_custom_days" class="form-label">Custom Interval</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="secondary_custom_days" name="secondary_custom_days" 
+                                                       value="{{ settings.secondary_custom_days or 1 }}" min="1" max="30">
+                                                <span class="input-group-text">days</span>
+                                            </div>
+                                            <div class="form-text">Send alerts every X days during secondary period</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Weekly Settings -->
+                                <div class="row" id="weeklySettings" style="display: none;">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="secondary_day_of_week" class="form-label">Day of Week</label>
+                                            <select class="form-select" id="secondary_day_of_week" name="secondary_day_of_week">
+                                                {% for day_num, day_name in days_of_week.items() %}
+                                                <option value="{{ day_num }}" {% if settings.secondary_day_of_week == day_num %}selected{% endif %}>{{ day_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-text">Day of the week to send weekly secondary alerts</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Twice Daily Settings -->
+                                <div class="row" id="twiceDailySettings" style="display: none;">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="secondary_second_time" class="form-label">Second Alert Time</label>
+                                            <input type="time" class="form-control" id="secondary_second_time" name="secondary_second_time" 
+                                                   value="{{ settings.preferred_second_time or '15:00' }}">
+                                            <div class="form-text">Second time of day for twice-daily alerts</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- System Scheduler Settings -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-clock me-2 text-info"></i>
+                                    Notification Scheduler Settings
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Scheduler Frequency:</strong> How often the system checks for assets that need notifications. 
+                                    More frequent checks provide better timing accuracy but use more system resources.
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="scheduler_frequency_type" class="form-label">Check Frequency</label>
+                                            <select class="form-select" id="scheduler_frequency_type" name="scheduler_frequency_type">
+                                                <option value="minutes" {% if settings.scheduler_frequency_type == 'minutes' %}selected{% endif %}>Every X Minutes</option>
+                                                <option value="hours" {% if settings.scheduler_frequency_type == 'hours' or not settings.scheduler_frequency_type %}selected{% endif %}>Every X Hours</option>
+                                            </select>
+                                            <div class="form-text">Type of frequency interval</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="scheduler_frequency_value" class="form-label">Frequency Value</label>
+                                            <input type="number" class="form-control" id="scheduler_frequency_value" name="scheduler_frequency_value" 
+                                                   value="{{ settings.scheduler_frequency_value or 60 }}" min="1" max="1440">
+                                            <div class="form-text" id="frequency_help">Check for notifications every 60 minutes</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title">Recommended Settings:</h6>
+                                                <ul class="mb-0">
+                                                    <li><strong>Production:</strong> Every 60 minutes (1 hour) - Good balance of accuracy and performance</li>
+                                                    <li><strong>High Accuracy:</strong> Every 15-30 minutes - For precise timing requirements</li>
+                                                    <li><strong>Testing:</strong> Every 5 minutes - For testing and development</li>
+                                                    <li><strong>Low Resource:</strong> Every 120 minutes (2 hours) - For minimal system impact</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="scheduler_enabled" name="scheduler_enabled" 
+                                                  {% if settings.scheduler_enabled is not defined or settings.scheduler_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="scheduler_enabled">
+                                                <strong>Enable Automatic Notifications</strong>
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Disable to stop all automatic warranty notifications system-wide</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legacy User Preference Defaults -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-user-cog me-2 text-secondary"></i>
+                                    User Preference Defaults
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-secondary">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    These settings provide defaults for users who haven't configured their own notification preferences.
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="frequency" class="form-label">Default User Frequency</label>
+                                            <select class="form-select" id="frequency" name="frequency">
+                                                <option value="once" {% if settings.frequency == 'once' %}selected{% endif %}>Once Only (when asset reaches alert period)</option>
+                                                <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>Once Daily</option>
+                                                <option value="twice_daily" {% if settings.frequency == 'twice_daily' %}selected{% endif %}>Twice Daily</option>
+                                                <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>Once Weekly</option>
+                                            </select>
+                                            <div class="form-text">Default frequency for users who haven't set preferences</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3" id="legacyWeeklyOptions" style="display: none;">
+                                            <label for="day_of_week" class="form-label">Default Day of Week</label>
+                                            <select class="form-select" id="day_of_week" name="day_of_week">
+                                                {% for day_num, day_name in days_of_week.items() %}
+                                                <option value="{{ day_num }}" {% if settings.day_of_week == day_num %}selected{% endif %}>{{ day_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="preferred_time" class="form-label">Default Preferred Time</label>
+                                            <input type="time" class="form-control" id="preferred_time" name="preferred_time" value="{{ settings.preferred_time }}">
+                                            <div class="form-text">Default time for user notifications (24-hour format)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6" id="legacySecondTimeOption" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="preferred_second_time" class="form-label">Default Second Time</label>
+                                            <input type="time" class="form-control" id="preferred_second_time" name="preferred_second_time" value="{{ settings.preferred_second_time }}">
+                                            <div class="form-text">Default second time for twice-daily notifications</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Save System Notification Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Recent Notification Activity with Pagination -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Recent Notification Activity</h5>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-secondary me-2">{{ notification_logs.total }} total logs</span>
+                        <span class="text-muted small">Page {{ notification_logs.page }} of {{ notification_logs.pages }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if notification_logs.items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Asset</th>
+                                    <th>Recipient</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Response</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in notification_logs.items %}
+                                <tr>
+                                    <td>{{ log.sent_at|format_datetime if log.sent_at else 'N/A' }}</td>
+                                    <td>
+                                        {% if log.asset %}
+                                        <a href="{{ url_for('asset.asset_detail', asset_id=log.asset.id) }}">
+                                            {{ log.asset.product_name }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">Unknown Asset</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.recipient_email }}</td>
+                                    <td>
+                                        {% if log.notification_type == 'initial' %}
+                                        <span class="badge bg-primary">Initial</span>
+                                        {% elif log.notification_type == 'secondary' %}
+                                        <span class="badge bg-warning">Secondary</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ log.notification_type or 'Unknown' }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.status == 'sent' %}
+                                        <span class="badge bg-success">Sent</span>
+                                        {% elif log.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                        {% elif log.status == 'acknowledged' %}
+                                        <span class="badge bg-info">Acknowledged</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ log.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.response %}
+                                        <span class="badge bg-info">{{ log.response|replace('_', ' ')|title }}</span>
+                                        {% if log.response_date %}
+                                        <small class="text-muted d-block">{{ log.response_date|format_datetime if log.response_date else 'N/A' }}</small>
+                                        {% endif %}
+                                        {% elif log.status == 'sent' %}
+                                        <span class="text-muted">Awaiting response</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    {% if notification_logs.pages > 1 %}
+                    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                        <div class="text-muted small">
+                            Showing {{ ((notification_logs.page - 1) * notification_logs.per_page) + 1 }} to 
+                            {{ ((notification_logs.page - 1) * notification_logs.per_page) + notification_logs.items|length }} 
+                            of {{ notification_logs.total }} entries
+                        </div>
+                        
+                        <nav aria-label="Notification logs pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                <!-- Previous Button -->
+                                {% if notification_logs.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('notification.admin_settings', page=notification_logs.prev_num) }}">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </span>
+                                </li>
+                                {% endif %}
+                                
+                                <!-- Page Numbers -->
+                                {% for page_num in notification_logs.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != notification_logs.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('notification.admin_settings', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                        {% endif %}
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                <!-- Next Button -->
+                                {% if notification_logs.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('notification.admin_settings', page=notification_logs.next_num) }}">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted mb-0"><i class="fas fa-bell-slash me-2"></i> No notification logs found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for dynamic form behavior -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Secondary frequency handling
+    const secondaryFrequency = document.getElementById('secondary_frequency');
+    const customIntervalSettings = document.getElementById('customIntervalSettings');
+    const weeklySettings = document.getElementById('weeklySettings');
+    const twiceDailySettings = document.getElementById('twiceDailySettings');
+    
+    // Legacy user preference handling
+    const frequencySelect = document.getElementById('frequency');
+    const legacyWeeklyOptions = document.getElementById('legacyWeeklyOptions');
+    const legacySecondTimeOption = document.getElementById('legacySecondTimeOption');
+    
+    function updateSecondaryFrequencyVisibility() {
+        const frequency = secondaryFrequency.value;
+        
+        // Hide all conditional sections first
+        customIntervalSettings.style.display = 'none';
+        weeklySettings.style.display = 'none';
+        twiceDailySettings.style.display = 'none';
+        
+        // Show relevant section based on selection
+        if (frequency === 'custom') {
+            customIntervalSettings.style.display = 'block';
+        } else if (frequency === 'weekly') {
+            weeklySettings.style.display = 'block';
+        } else if (frequency === 'twice_daily') {
+            twiceDailySettings.style.display = 'block';
+        }
+    }
+    
+    function updateLegacyFrequencyVisibility() {
+        const frequency = frequencySelect.value;
+        
+        // Show/hide legacy weekly day selection
+        if (frequency === 'weekly') {
+            legacyWeeklyOptions.style.display = 'block';
+        } else {
+            legacyWeeklyOptions.style.display = 'none';
+        }
+        
+        // Show/hide legacy second time selection
+        if (frequency === 'twice_daily') {
+            legacySecondTimeOption.style.display = 'block';
+        } else {
+            legacySecondTimeOption.style.display = 'none';
+        }
+    }
+    
+    // Initial state setup
+    updateSecondaryFrequencyVisibility();
+    updateLegacyFrequencyVisibility();
+    
+    // Scheduler frequency help text updater
+    const schedulerFrequencyType = document.getElementById('scheduler_frequency_type');
+    const schedulerFrequencyValue = document.getElementById('scheduler_frequency_value');
+    const frequencyHelp = document.getElementById('frequency_help');
+    
+    function updateSchedulerFrequencyHelp() {
+        const type = schedulerFrequencyType.value;
+        const value = schedulerFrequencyValue.value || 1;
+        const unit = type === 'minutes' ? 'minute' : 'hour';
+        const plural = value != 1 ? 's' : '';
+        
+        frequencyHelp.textContent = `Check for notifications every ${value} ${unit}${plural}`;
+        
+        // Add performance warnings
+        if (type === 'minutes' && value < 5) {
+            frequencyHelp.innerHTML += ' <span class="text-warning">(⚠️ Very frequent - may impact performance)</span>';
+        } else if (type === 'minutes' && value <= 15) {
+            frequencyHelp.innerHTML += ' <span class="text-info">(ℹ️ High frequency - good for testing)</span>';
+        } else if (type === 'hours' && value >= 4) {
+            frequencyHelp.innerHTML += ' <span class="text-warning">(⚠️ Infrequent - may miss optimal timing)</span>';
+        }
+    }
+    
+    // Event listeners
+    secondaryFrequency.addEventListener('change', updateSecondaryFrequencyVisibility);
+    frequencySelect.addEventListener('change', updateLegacyFrequencyVisibility);
+    schedulerFrequencyType.addEventListener('change', updateSchedulerFrequencyHelp);
+    schedulerFrequencyValue.addEventListener('input', updateSchedulerFrequencyHelp);
+    
+    // Initial scheduler help update
+    updateSchedulerFrequencyHelp();
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const initialDays = parseInt(document.getElementById('initial_alert_days').value);
+        const secondaryDays = parseInt(document.getElementById('secondary_alert_days').value);
+        
+        if (initialDays <= secondaryDays) {
+            e.preventDefault();
+            alert('Initial alert days must be greater than secondary alert days. Initial alerts should trigger before secondary alerts.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

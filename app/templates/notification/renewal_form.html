@@ -1,0 +1,56 @@
+<!-- app/templates/notification/renewal_form.html -->
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Record Warranty Renewal</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <p>Please provide the details of the warranty renewal for the following asset:</p>
+                    </div>
+                    
+                    <h5>Asset Information</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 30%">Asset Name</th>
+                                    <td>{{ asset.product_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Model</th>
+                                    <td>{{ asset.product_model }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Serial Number</th>
+                                    <td>{{ asset.serial_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Previous Warranty Expiry</th>
+                                    <td>{{ asset.warranty_expiry_date.strftime('%B %d, %Y') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="warranty_duration" class="form-label">New Warranty Duration (months)</label>
+                            <input type="number" class="form-control" id="warranty_duration" name="warranty_duration" min="1" value="12" required>
+                            <div class="form-text">Enter the duration of the new warranty in months. The expiry date will be calculated from today.</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Record Renewal</button>
+                        <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

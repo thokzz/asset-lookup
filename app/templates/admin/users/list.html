@@ -1,0 +1,143 @@
+{% extends 'layout.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-users me-2"></i> User Management
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.create_user') }}" class="btn btn-sm btn-primary">
+            <i class="fas fa-user-plus me-1"></i> Add User
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Groups</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.full_name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% for group in user.groups %}
+                            <span class="badge bg-secondary me-1">{{ group.name }}</span>
+                            {% else %}
+                            <span class="text-muted">No groups</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if user.is_admin %}
+                            <span class="badge bg-danger">Administrator</span>
+                            {% elif user.is_group_admin %}
+                            <span class="badge bg-warning">Group Admin</span>
+                            {% else %}
+                            <span class="badge bg-secondary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            
+                            {% if user.id != current_user.id %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete user <strong>{{ user.username }}</strong> ({{ user.role_display }})?
+                                            This action cannot be undone.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Role explanation card -->
+<div class="card mt-4 bg-light">
+    <div class="card-body">
+        <h6 class="card-title">User Role Explanation</h6>
+        <div class="row">
+            <div class="col-md-4">
+                <strong><span class="badge bg-danger me-2">Administrator</span></strong>
+                <ul class="mb-0 mt-2 small">
+                    <li>Full system access</li>
+                    <li>Can see and manage all assets</li>
+                    <li>Can assign any groups to assets</li>
+                    <li>Can delete assets</li>
+                    <li>Can manage users and groups</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <strong><span class="badge bg-warning me-2">Group Admin</span></strong>
+                <ul class="mb-0 mt-2 small">
+                    <li>Can create and edit assets</li>
+                    <li>Can only assign their own groups to assets</li>
+                    <li>Can see assets assigned to their groups</li>
+                    <li>Can delete assets assigned to their groups</li>
+                    <li>Cannot manage users or groups</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <strong><span class="badge bg-secondary me-2">User</span></strong>
+                <ul class="mb-0 mt-2 small">
+                    <li>Can create and edit assets</li>
+                    <li>Can only assign their own groups to assets</li>
+                    <li>Can see assets assigned to them or their groups</li>
+                    <li>Cannot delete assets</li>
+                    <li>Cannot manage users or groups</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

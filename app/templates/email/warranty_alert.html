@@ -1,0 +1,286 @@
+<!-- app/templates/emails/enhanced_warranty_alert.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warranty Alert - {{ asset.product_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .alert-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .initial { background-color: #007bff; color: white; }
+        .secondary { background-color: #ffc107; color: #212529; }
+        .critical { background-color: #dc3545; color: white; }
+        .expired { background-color: #6c757d; color: white; }
+        
+        .asset-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .asset-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .info-value {
+            color: #495057;
+        }
+        
+        .countdown {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        .countdown-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .countdown-text {
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .actions {
+            margin: 30px 0;
+            text-align: center;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 8px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .urgent-notice {
+            background-color: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .critical-notice {
+            background-color: #f8d7da;
+            border: 2px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .expired-notice {
+            background-color: #d1ecf1;
+            border: 2px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .countdown-number { font-size: 36px; }
+            .action-button { 
+                display: block; 
+                margin: 10px 0; 
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="alert-badge {{ 'critical' if is_critical else ('expired' if is_expired else notification_type) }}">
+                {{ urgency }}
+            </div>
+            <h1>Warranty Expiration Alert</h1>
+            <p>{{ notification_type|title }} notification for asset warranty expiring soon</p>
+        </div>
+        
+        <div class="asset-info">
+            <h3>Asset Information</h3>
+            <div class="info-row">
+                <span class="info-label">Product Name:</span>
+                <span class="info-value">{{ asset.product_name }}</span>
+            </div>
+            {% if asset.product_model %}
+            <div class="info-row">
+                <span class="info-label">Model:</span>
+                <span class="info-value">{{ asset.product_model }}</span>
+            </div>
+            {% endif %}
+            {% if asset.serial_number %}
+            <div class="info-row">
+                <span class="info-label">Serial Number:</span>
+                <span class="info-value">{{ asset.serial_number }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">Purchase Date:</span>
+                <span class="info-value">{{ asset.purchase_date.strftime('%B %d, %Y') }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Warranty Duration:</span>
+                <span class="info-value">{{ asset.warranty_duration }} months</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Warranty Expires:</span>
+                <span class="info-value">{{ expiry_date }}</span>
+            </div>
+            {% if asset.location %}
+            <div class="info-row">
+                <span class="info-label">Location:</span>
+                <span class="info-value">{{ asset.location }}</span>
+            </div>
+            {% endif %}
+            {% if asset.vendor_company %}
+            <div class="info-row">
+                <span class="info-label">Vendor:</span>
+                <span class="info-value">{{ asset.vendor_company }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if is_expired %}
+        <div class="expired-notice">
+            <h3 style="margin-top: 0; color: #0c5460;">⚠️ WARRANTY EXPIRED</h3>
+            <p><strong>This asset's warranty has already expired {{ days_remaining|abs }} days ago.</strong></p>
+            <p>Please take appropriate action to either renew the warranty or update the asset status.</p>
+        </div>
+        {% elif is_critical %}
+        <div class="critical-notice">
+            <h3 style="margin-top: 0; color: #721c24;">🚨 CRITICAL - WARRANTY EXPIRES VERY SOON</h3>
+            <p><strong>This asset's warranty expires in {{ days_remaining }} days!</strong></p>
+            <p>Immediate action is required to avoid service interruption.</p>
+        </div>
+        {% elif notification_type == 'secondary' %}
+        <div class="urgent-notice">
+            <h3 style="margin-top: 0; color: #856404;">⏰ FOLLOW-UP REMINDER</h3>
+            <p><strong>This is a follow-up reminder about this asset's warranty expiration.</strong></p>
+            <p>The warranty expires in {{ days_remaining }} days. Please take action soon.</p>
+        </div>
+        {% endif %}
+        
+        <div class="countdown">
+            {% if is_expired %}
+            <div class="countdown-number">EXPIRED</div>
+            <div class="countdown-text">{{ days_remaining|abs }} days ago</div>
+            {% else %}
+            <div class="countdown-number">{{ days_remaining }}</div>
+            <div class="countdown-text">
+                Day{{ 's' if days_remaining != 1 else '' }} Remaining
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="actions">
+            <h3>What would you like to do?</h3>
+            <p style="margin-bottom: 25px;">Click one of the buttons below to let us know your decision:</p>
+            
+            <a href="{{ response_urls.renewed }}" class="action-button btn-success">
+                ✅ Warranty Renewed
+            </a>
+            
+            <a href="{{ response_urls.will_not_renew }}" class="action-button btn-warning">
+                ❌ Will Not Renew
+            </a>
+            
+            <a href="{{ response_urls.pending }}" class="action-button btn-info">
+                ⏳ Action Pending
+            </a>
+            
+            <a href="{{ response_urls.disable_notifications }}" class="action-button btn-secondary">
+                🔕 Disable Notifications
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Asset Lookup System</strong></p>
+            <p>This email was sent on {{ current_date }} to {{ recipient_email }}</p>
+            <p>If you believe this email was sent in error, please contact your system administrator.</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #dee2e6;">
+            <p style="font-size: 12px; color: #868e96;">
+                This is an automated message from the Asset Lookup system. 
+                Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

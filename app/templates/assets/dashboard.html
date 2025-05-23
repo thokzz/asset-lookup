@@ -1,0 +1,588 @@
+<!-- Fixed dashboard template - the notification chart won't fall anymore! -->
+{% extends 'layout.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('asset.export_assets') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-file-export me-1"></i> Export
+            </a>
+            {% if current_user.has_permission('CREATE') %}
+            <a href="{{ url_for('asset.import_assets') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-file-import me-1"></i> Import
+            </a>
+            {% endif %}
+        </div>
+        {% if current_user.has_permission('CREATE') %}
+        <a href="{{ url_for('asset.create_asset') }}" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Asset
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Status Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Good Standing</h6>
+                        <h2 class="mt-2 mb-0 text-success">{{ good_standing_count }}</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-shield-alt text-success fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">31+ days remaining</small>
+                    <div>
+                        <a href="{{ url_for('asset.asset_list', status='good_standing') }}" class="text-muted">View all <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Expiring Soon</h6>
+                        <h2 class="mt-2 mb-0 text-warning">{{ expiring_count }}</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">1-30 days remaining</small>
+                    <div>
+                        <a href="{{ url_for('asset.asset_list', status='expiring') }}" class="text-muted">View all <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Expired</h6>
+                        <h2 class="mt-2 mb-0 text-danger">{{ expired_count }}</h2>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-times-circle text-danger fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">0 days remaining</small>
+                    <div>
+                        <a href="{{ url_for('asset.asset_list', status='expired') }}" class="text-muted">View all <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-muted mb-0">Total</h6>
+                        <h2 class="mt-2 mb-0 text-primary">{{ total_count }}</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-cubes text-primary fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">All assets</small>
+                    <div>
+                        <a href="{{ url_for('asset.asset_list') }}" class="text-muted">View all <i class="fas fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Warranty Status Chart -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Warranty Status Distribution</h5>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                    <canvas id="warrantyStatusChart" style="max-height: 300px; width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Response Chart -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Notification Responses {{ current_year }}</h5>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('notification.admin_settings') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-cog"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body d-flex flex-column">
+                <!-- This will be populated by JavaScript -->
+                <div id="notificationResponseContainer" class="flex-grow-1 d-flex align-items-center justify-content-center">
+                    <!-- Loading state -->
+                    <div class="text-center text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading response data...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expiration Timeline Chart -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Expiration Timeline</h5>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                    <canvas id="expirationTimelineChart" style="max-height: 300px; width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Summary Cards (will be populated by JavaScript if there are responses) -->
+<div id="responseSummaryRow" class="row mb-4" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i><span id="summaryYear">{{ current_year }}</span> Asset Response Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>About Asset Responses:</strong> This tracks unique assets that have received responses, 
+                    showing the latest response per asset. Assets can have their responses updated/changed.
+                </div>
+                <div class="row" id="responseSummaryContent">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                <span id="assetsExpiringThisYear">-</span> assets expiring this year
+                            </span>
+                            <span class="text-muted">
+                                <i class="fas fa-reply me-1"></i>
+                                <span id="totalAssetsWithResponses">-</span> assets with responses
+                            </span>
+                        </div>
+                        <div class="progress mt-2">
+                            <div class="progress-bar bg-info" role="progressbar" id="responseProgressBar" style="width: 0%">
+                                <span id="responsePercentage">0%</span>
+                            </div>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Percentage of expiring assets with responses</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Expiring or Expired -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Recently Expired or Expiring Soon</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Purchase Date</th>
+                        <th>Expiration Date</th>
+                        <th>Status</th>
+                        <th>Notifications</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in recent_assets %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ asset.product_name }}</div>
+                            <div class="text-muted small">{{ asset.product_model }}</div>
+                        </td>
+                        <td>{{ asset.purchase_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ asset.warranty_expiry_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if asset.status == 'Active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif asset.status == 'Expiring Soon' %}
+                            <span class="badge bg-warning">Expiring Soon ({{ asset.days_remaining }} days)</span>
+                            {% else %}
+                            <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if asset.notifications_enabled %}bg-info{% else %}bg-secondary{% endif %}">
+                                {% if asset.notifications_enabled %}Enabled{% else %}Disabled{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i> No assets expiring or expired
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Warranty Status Chart
+        const statusChartCtx = document.getElementById('warrantyStatusChart').getContext('2d');
+        const statusChart = new Chart(statusChartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Good Standing', 'Expiring Soon', 'Expired'],
+                datasets: [{
+                    data: [{{ good_standing_count }}, {{ expiring_count }}, {{ expired_count }}],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                
+                                let description = '';
+                                if (label === 'Good Standing') {
+                                    description = ' (31+ days remaining)';
+                                } else if (label === 'Expiring Soon') {
+                                    description = ' (1-30 days remaining)';
+                                } else if (label === 'Expired') {
+                                    description = ' (0 days remaining)';
+                                }
+                                
+                                return `${label}: ${value} (${percentage}%)${description}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Load notification response data
+        loadNotificationResponseData();
+        
+        // Load timeline data with AJAX
+        fetch('/api/dashboard/expiration-timeline')
+            .then(response => response.json())
+            .then(data => {
+                const months = data.map(item => item.month);
+                const counts = data.map(item => item.count);
+                
+                // Expiration Timeline Chart
+                const timelineChartCtx = document.getElementById('expirationTimelineChart').getContext('2d');
+                const timelineChart = new Chart(timelineChartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Warranties Expiring',
+                            data: counts,
+                            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 1,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading timeline data:', error);
+                // Show error state in timeline chart
+                const timelineContainer = document.getElementById('expirationTimelineChart').parentElement;
+                timelineContainer.innerHTML = '<div class="text-center text-muted"><i class="fas fa-exclamation-triangle me-2"></i>Error loading timeline data</div>';
+            });
+    });
+    
+    function loadNotificationResponseData() {
+        const container = document.getElementById('notificationResponseContainer');
+        
+        fetch('/api/dashboard/notification-responses')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Asset response data:', data); // Debug log
+                
+                if (data.total > 0) {
+                    // Create proper container structure
+                    container.innerHTML = `
+                        <div class="d-flex flex-column h-100">
+                            <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                                <canvas id="notificationResponseChart" style="max-height: 250px; width: 100%;"></canvas>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-cubes me-1"></i>
+                                    ${data.total} assets with responses
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Filter out zero values and create corresponding labels
+                    const nonZeroData = [];
+                    const nonZeroLabels = [];
+                    const nonZeroColors = [];
+                    const nonZeroBorderColors = [];
+                    
+                    const allData = [
+                        { label: 'Renewed', value: data.responses.renewed, bg: 'rgba(40, 167, 69, 0.8)', border: 'rgba(40, 167, 69, 1)' },
+                        { label: 'Will Not Renew', value: data.responses.will_not_renew, bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' },
+                        { label: 'Pending', value: data.responses.pending, bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' },
+                        { label: 'Disabled Notifications', value: data.responses.disable_notifications, bg: 'rgba(108, 117, 125, 0.8)', border: 'rgba(108, 117, 125, 1)' }
+                    ];
+                    
+                    // Only include non-zero values
+                    allData.forEach(item => {
+                        if (item.value > 0) {
+                            nonZeroData.push(item.value);
+                            nonZeroLabels.push(item.label);
+                            nonZeroColors.push(item.bg);
+                            nonZeroBorderColors.push(item.border);
+                        }
+                    });
+                    
+                    // Create the chart
+                    const responseChartCtx = document.getElementById('notificationResponseChart').getContext('2d');
+                    const responseChart = new Chart(responseChartCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: nonZeroLabels,
+                            datasets: [{
+                                data: nonZeroData,
+                                backgroundColor: nonZeroColors,
+                                borderColor: nonZeroBorderColors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            aspectRatio: 1,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            size: 10
+                                        },
+                                        padding: 10,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = data.total;
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                            return `${label}: ${value} assets (${percentage}%)`;
+                                        },
+                                        title: function(context) {
+                                            return 'Asset Responses ' + data.year;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Show and populate summary cards
+                    showResponseSummary(data);
+                } else {
+                    // Show empty state with better messaging
+                    const expiringAssetsCount = data.assets_expiring_this_year || 0;
+                    container.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <p><strong>No asset responses yet this year</strong></p>
+                            <small>
+                                ${expiringAssetsCount > 0 
+                                    ? `${expiringAssetsCount} assets expiring this year - responses will appear here when users respond to warranty alerts` 
+                                    : 'No assets expiring this year'
+                                }
+                            </small>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading asset response data:', error);
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Error loading response data</p>
+                        <small>Please try refreshing the page. Check console for details.</small>
+                    </div>
+                `;
+            });
+    }
+
+    function showResponseSummary(data) {
+        const summaryRow = document.getElementById('responseSummaryRow');
+        const summaryContent = document.getElementById('responseSummaryContent');
+        const summaryYear = document.getElementById('summaryYear');
+        const assetsExpiringSpan = document.getElementById('assetsExpiringThisYear');
+        const totalResponsesSpan = document.getElementById('totalAssetsWithResponses');
+        const progressBar = document.getElementById('responseProgressBar');
+        const percentageSpan = document.getElementById('responsePercentage');
+        
+        summaryYear.textContent = data.year;
+        assetsExpiringSpan.textContent = data.assets_expiring_this_year || 0;
+        totalResponsesSpan.textContent = data.total;
+        
+        // Calculate response percentage
+        const responsePercentage = data.assets_expiring_this_year > 0 
+            ? ((data.total / data.assets_expiring_this_year) * 100).toFixed(1)
+            : 0;
+        
+        progressBar.style.width = `${Math.min(responsePercentage, 100)}%`;
+        percentageSpan.textContent = `${responsePercentage}%`;
+        
+        summaryContent.innerHTML = `
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                        <i class="fas fa-sync-alt text-success"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-success">${data.responses.renewed}</div>
+                        <div class="text-muted small">Assets Renewed</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
+                        <i class="fas fa-times text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-danger">${data.responses.will_not_renew}</div>
+                        <div class="text-muted small">Will Not Renew</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
+                        <i class="fas fa-clock text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-warning">${data.responses.pending}</div>
+                        <div class="text-muted small">Pending Decision</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
+                        <i class="fas fa-bell-slash text-secondary"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-secondary">${data.responses.disable_notifications}</div>
+                        <div class="text-muted small">Notifications Disabled</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        summaryRow.style.display = 'block';
+    }
+</script>
+{% endblock %}

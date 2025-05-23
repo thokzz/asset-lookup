@@ -1,0 +1,220 @@
+{% extends "layout.html" %}
+
+{% block title %}2FA User Overview{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-shield-alt me-2"></i> Two-Factor Authentication Overview
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.settings') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-cog me-2"></i>System Settings
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Total Active Users</h5>
+                        <h2 class="mb-0">{{ total_users }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">2FA Enabled</h5>
+                        <h2 class="mb-0 text-success">{{ users_with_2fa }}</h2>
+                        <small class="text-muted">
+                            {{ "%.1f"|format((users_with_2fa / total_users * 100) if total_users > 0 else 0) }}% of users
+                        </small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shield-alt fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">2FA Pending</h5>
+                        <h2 class="mb-0 text-warning">{{ users_without_2fa }}</h2>
+                        <small class="text-muted">
+                            {{ "%.1f"|format((users_without_2fa / total_users * 100) if total_users > 0 else 0) }}% of users
+                        </small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">2FA Adoption Progress</h6>
+            <small class="text-muted">{{ users_with_2fa }} / {{ total_users }} users</small>
+        </div>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success" 
+                 role="progressbar" 
+                 style="width: {{ (users_with_2fa / total_users * 100) if total_users > 0 else 0 }}%"
+                 aria-valuenow="{{ users_with_2fa }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="{{ total_users }}">
+                {{ "%.1f"|format((users_with_2fa / total_users * 100) if total_users > 0 else 0) }}%
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list me-2"></i>User 2FA Status Details
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>2FA Status</th>
+                        <th>Setup Date</th>
+                        <th>Last Login</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% if user.two_factor_setup_complete %}
+                                        <i class="fas fa-shield-alt text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-user text-muted"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ user.username }}</div>
+                                    {% if user.first_name or user.last_name %}
+                                    <small class="text-muted">{{ user.full_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge bg-danger">Admin</span>
+                            {% elif user.is_group_admin %}
+                                <span class="badge bg-warning">Group Admin</span>
+                            {% else %}
+                                <span class="badge bg-secondary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.two_factor_setup_complete %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Enabled
+                                </span>
+                            {% elif user.needs_2fa_setup() %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Setup Required
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-times me-1"></i>Not Required
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.two_factor_setup_complete %}
+                                <span class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {{ user.updated_at|format_datetime('%Y-%m-%d') }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-muted">
+                                {{ user.updated_at|format_datetime('%Y-%m-%d %H:%M') }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Information Card -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-info-circle me-2"></i>2FA Information
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>How 2FA Works:</h6>
+                <ul class="small">
+                    <li>Users install an authenticator app (Google Authenticator, Authy, etc.)</li>
+                    <li>They scan a QR code to add their account to the app</li>
+                    <li>During login, they enter their password + 6-digit code from the app</li>
+                    <li>Codes change every 30 seconds for maximum security</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Admin Actions:</h6>
+                <ul class="small">
+                    <li>Enable/disable 2FA system-wide in <a href="{{ url_for('admin.settings') }}">System Settings</a></li>
+                    <li>Monitor user adoption progress on this page</li>
+                    <li>Users who haven't set up 2FA will be prompted on next login</li>
+                    <li>Contact support if users lose access to their authenticator app</li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if users_without_2fa > 0 %}
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>{{ users_without_2fa }} user(s)</strong> still need to set up 2FA. 
+            They will be prompted to complete setup on their next login.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

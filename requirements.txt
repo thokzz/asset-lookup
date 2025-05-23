@@ -1,0 +1,21 @@
+Flask==2.0.1
+Flask-Cors==3.0.10
+Flask-Login==0.6.2
+Flask-Bcrypt==1.0.1
+Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.23
+gunicorn==20.1.0
+# psycopg2-binary can be problematic on some systems
+# if it fails, try installing libpq-dev and using regular psycopg2
+# sudo apt-get install libpq-dev
+# or comment this out if you're using SQLite
+psycopg2-binary==2.9.3
+Werkzeug==2.0.1
+PyJWT==2.6.0
+email-validator==1.3.1
+APScheduler==3.10.4
+python-dateutil==2.8.2
+Flask-Mail==0.9.1
+# 2FA Dependencies
+pyotp==2.8.0
+qrcode[pil]==7.4.2

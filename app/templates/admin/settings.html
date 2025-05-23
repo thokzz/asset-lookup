@@ -1,0 +1,301 @@
+{% extends 'layout.html' %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-sliders-h me-2"></i> System Settings
+    </h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Application Settings</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('admin.settings') }}">
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="allow_registration" name="allow_registration" 
+                           {% if config.ALLOW_REGISTRATION %}checked{% endif %}>
+                    <label class="form-check-label" for="allow_registration">Allow New User Registration</label>
+                </div>
+                <div class="form-text">If enabled, new users can register accounts on the login page.</div>
+            </div>
+            
+            <!-- 2FA System Toggle -->
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="two_factor_enabled" name="two_factor_enabled" 
+                           {% if config.TWO_FACTOR_ENABLED %}checked{% endif %}>
+                    <label class="form-check-label" for="two_factor_enabled">
+                        <strong>Enable Two-Factor Authentication (2FA)</strong>
+                    </label>
+                </div>
+                <div class="form-text">
+                    When enabled, all users will be required to set up and use two-factor authentication for enhanced security.
+                    Users will need to use an authenticator app (like Google Authenticator, Authy, or Microsoft Authenticator) to generate verification codes.
+                </div>
+                <div class="alert alert-info mt-2">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> When you enable 2FA, existing users will be prompted to set up their authenticator app on their next login.
+                    Make sure users have access to an authenticator app before enabling this feature.
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="app_timezone" class="form-label">Application Timezone</label>
+                <select class="form-select" id="app_timezone" name="app_timezone">
+                    <optgroup label="Common Timezones">
+                        <option value="UTC" {% if config.APP_TIMEZONE == 'UTC' %}selected{% endif %}>UTC</option>
+                        <option value="America/New_York" {% if config.APP_TIMEZONE == 'America/New_York' %}selected{% endif %}>Eastern Time (US & Canada)</option>
+                        <option value="America/Chicago" {% if config.APP_TIMEZONE == 'America/Chicago' %}selected{% endif %}>Central Time (US & Canada)</option>
+                        <option value="America/Denver" {% if config.APP_TIMEZONE == 'America/Denver' %}selected{% endif %}>Mountain Time (US & Canada)</option>
+                        <option value="America/Los_Angeles" {% if config.APP_TIMEZONE == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (US & Canada)</option>
+                        <option value="Europe/London" {% if config.APP_TIMEZONE == 'Europe/London' %}selected{% endif %}>London (GMT/BST)</option>
+                        <option value="Europe/Paris" {% if config.APP_TIMEZONE == 'Europe/Paris' %}selected{% endif %}>Central European Time (Paris, Berlin)</option>
+                        <option value="Asia/Tokyo" {% if config.APP_TIMEZONE == 'Asia/Tokyo' %}selected{% endif %}>Japan Standard Time (Tokyo)</option>
+                        <option value="Asia/Shanghai" {% if config.APP_TIMEZONE == 'Asia/Shanghai' %}selected{% endif %}>China Standard Time (Beijing, Shanghai)</option>
+                        <option value="Asia/Singapore" {% if config.APP_TIMEZONE == 'Asia/Singapore' %}selected{% endif %}>Singapore Time</option>
+                        <option value="Asia/Manila" {% if config.APP_TIMEZONE == 'Asia/Manila' %}selected{% endif %}>Philippine Time</option>
+                        <option value="Australia/Sydney" {% if config.APP_TIMEZONE == 'Australia/Sydney' %}selected{% endif %}>Australian Eastern Time (Sydney, Melbourne)</option>
+                    </optgroup>
+                    <optgroup label="Other Timezones">
+                        <option value="Africa/Cairo" {% if config.APP_TIMEZONE == 'Africa/Cairo' %}selected{% endif %}>Eastern European Time (Cairo)</option>
+                        <option value="Asia/Dubai" {% if config.APP_TIMEZONE == 'Asia/Dubai' %}selected{% endif %}>Gulf Standard Time (Dubai)</option>
+                        <option value="Asia/Kolkata" {% if config.APP_TIMEZONE == 'Asia/Kolkata' %}selected{% endif %}>India Standard Time</option>
+                        <option value="Pacific/Auckland" {% if config.APP_TIMEZONE == 'Pacific/Auckland' %}selected{% endif %}>New Zealand Time</option>
+                        <option value="America/Sao_Paulo" {% if config.APP_TIMEZONE == 'America/Sao_Paulo' %}selected{% endif %}>Brazil Time (São Paulo)</option>
+                    </optgroup>
+                </select>
+                <div class="form-text mt-2">
+                    Current application time: <strong id="current-app-time">{{ now|format_datetime }}</strong>
+                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="refresh-time">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i> 
+                    <strong>Timezone Information:</strong> Changing the application timezone affects how dates and times are displayed throughout the application. All data is stored in UTC in the database and converted to the selected timezone for display. This ensures consistent time handling across the application.
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Save Application Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Time Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Application Time:</label>
+                    <div>{{ now|format_datetime }}</div>
+                    <div class="form-text">Current time in {{ config.APP_TIMEZONE }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">UTC Time:</label>
+                    <div>{{ now.strftime('%Y-%m-%d %H:%M:%S') }} UTC</div>
+                    <div class="form-text">Current time in UTC (database storage format)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Timezone Offset:</label>
+                    <div>UTC {{ now.strftime('%z') }}</div>
+                    <div class="form-text">Current offset from UTC time</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Database Storage:</label>
+                    <div>UTC (Coordinated Universal Time)</div>
+                    <div class="form-text">All timestamps are stored in UTC for consistency</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4" id="smtp-settings">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Email (SMTP) Settings</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('admin.settings') }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="mail_server" class="form-label">SMTP Server</label>
+                        <input type="text" class="form-control" id="mail_server" name="mail_server" 
+                               value="{{ config.MAIL_SERVER }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="mail_port" class="form-label">SMTP Port</label>
+                        <input type="number" class="form-control" id="mail_port" name="mail_port" 
+                               value="{{ config.MAIL_PORT }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="mail_use_tls" name="mail_use_tls" 
+                           {% if config.MAIL_USE_TLS %}checked{% endif %}>
+                    <label class="form-check-label" for="mail_use_tls">Use TLS</label>
+                </div>
+                <div class="form-text">If enabled, TLS encryption will be used for the SMTP connection.</div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="mail_username" class="form-label">SMTP Username</label>
+                        <input type="text" class="form-control" id="mail_username" name="mail_username" 
+                               value="{{ config.MAIL_USERNAME }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="mail_password" class="form-label">SMTP Password</label>
+                        <input type="password" class="form-control" id="mail_password" name="mail_password" 
+                               value="{{ config.MAIL_PASSWORD }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="mail_default_sender" class="form-label">Default Sender Email</label>
+                <input type="email" class="form-control" id="mail_default_sender" name="mail_default_sender" 
+                       value="{{ config.MAIL_DEFAULT_SENDER }}">
+                <div class="form-text">This email address will be used as the sender for all system emails.</div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Save SMTP Settings</button>
+            </div>
+        </form>
+        
+        <hr class="my-4">
+        
+        <h5>Test Email Configuration</h5>
+        <form method="post" action="{{ url_for('admin.test_smtp') }}" class="row g-3">
+            <div class="col-md-8">
+                <input type="email" class="form-control" id="test_email" name="test_email" 
+                       placeholder="Enter email address to send test to">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary w-100">Send Test Email</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2FA Status Card -->
+{% if config.TWO_FACTOR_ENABLED %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-shield-alt me-2 text-success"></i>
+            Two-Factor Authentication Status
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>2FA is currently enabled system-wide.</strong>
+        </div>
+        
+        <p>When 2FA is enabled:</p>
+        <ul>
+            <li>All users will be required to set up 2FA on their next login</li>
+            <li>Users will need an authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.)</li>
+            <li>Login will require both password and 6-digit verification code</li>
+        </ul>
+        
+        <div class="mt-3">
+            <a href="{{ url_for('auth.two_factor_admin_overview') }}" class="btn btn-outline-info">
+                <i class="fas fa-users me-2"></i>View User 2FA Status
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to update the displayed current time
+    function updateCurrentTime() {
+        // Make an AJAX request to get the current server time
+        fetch('/api/current_time')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('current-app-time').textContent = data.current_time;
+            })
+            .catch(error => {
+                console.error('Error fetching current time:', error);
+                document.getElementById('current-app-time').textContent = 'Error loading time';
+            });
+    }
+    
+    // Update when the refresh button is clicked
+    const refreshButton = document.getElementById('refresh-time');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', updateCurrentTime);
+    }
+    
+    // Update when the timezone is changed
+    const timezoneSelect = document.getElementById('app_timezone');
+    if (timezoneSelect) {
+        timezoneSelect.addEventListener('change', function() {
+            // Show a message to let the user know they need to save to see the updated time
+            document.getElementById('current-app-time').textContent = 'Save settings to update time';
+        });
+    }
+    
+    // 2FA toggle warning
+    const twoFactorToggle = document.getElementById('two_factor_enabled');
+    if (twoFactorToggle) {
+        twoFactorToggle.addEventListener('change', function() {
+            if (this.checked) {
+                const confirmEnable = confirm(
+                    'Are you sure you want to enable Two-Factor Authentication system-wide?\n\n' +
+                    'This will require ALL users to set up 2FA on their next login. ' +
+                    'Make sure users have access to an authenticator app before enabling this feature.'
+                );
+                
+                if (!confirmEnable) {
+                    this.checked = false;
+                }
+            } else {
+                const confirmDisable = confirm(
+                    'Are you sure you want to disable Two-Factor Authentication?\n\n' +
+                    'This will disable 2FA for all users and may reduce system security.'
+                );
+                
+                if (!confirmDisable) {
+                    this.checked = true;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

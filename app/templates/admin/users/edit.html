@@ -1,0 +1,178 @@
+{% extends 'layout.html' %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-edit me-2"></i> Edit User: {{ user.username }}
+        <span class="badge bg-secondary ms-2">{{ user.role_display }}</span>
+    </h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="password" class="form-label">New Password (leave blank to keep current)</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin" {% if user.is_admin %}checked{% endif %}>
+                            <label class="form-check-label" for="is_admin">Administrator</label>
+                        </div>
+                        <small class="form-text text-muted">Full access to all system functions</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_group_admin" name="is_group_admin" {% if user.is_group_admin %}checked{% endif %}>
+                            <label class="form-check-label" for="is_group_admin">Group Admin</label>
+                        </div>
+                        <small class="form-text text-muted">Can create/edit assets and assign their own groups</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if user.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">Active</label>
+                        </div>
+                        <small class="form-text text-muted">Inactive users cannot log in</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="groups" class="form-label">Groups</label>
+                <select class="form-select" id="groups" name="groups" multiple size="5">
+                    {% for group in groups %}
+                    <option value="{{ group.id }}" {% if group in user.groups %}selected{% endif %}>{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple groups</small>
+            </div>
+            
+            <!-- Role explanation card -->
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">User Role Permissions</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Administrator:</strong>
+                            <ul class="mb-0 mt-1">
+                                <li>Full system access</li>
+                                <li>Can see all assets</li>
+                                <li>Can assign any groups to assets</li>
+                                <li>Can delete assets</li>
+                                <li>Can manage users and groups</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Group Admin:</strong>
+                            <ul class="mb-0 mt-1">
+                                <li>Can create and edit assets</li>
+                                <li>Can only assign their own groups to assets</li>
+                                <li>Can see assets assigned to their groups</li>
+                                <li>Cannot delete assets</li>
+                                <li>Cannot manage users or groups</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Regular User:</strong>
+                            <ul class="mb-0 mt-1">
+                                <li>Can create and edit assets</li>
+                                <li>Can only assign their own groups to assets</li>
+                                <li>Can see assets assigned to them or their groups</li>
+                                <li>Cannot delete assets</li>
+                                <li>Cannot manage users or groups</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin.user_list') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable group admin checkbox when admin is selected
+    const adminCheckbox = document.getElementById('is_admin');
+    const groupAdminCheckbox = document.getElementById('is_group_admin');
+    
+    function updateCheckboxStates() {
+        if (adminCheckbox.checked) {
+            groupAdminCheckbox.checked = false;
+            groupAdminCheckbox.disabled = true;
+        } else if (groupAdminCheckbox.checked) {
+            adminCheckbox.checked = false;
+            adminCheckbox.disabled = true;
+        } else {
+            adminCheckbox.disabled = false;
+            groupAdminCheckbox.disabled = false;
+        }
+    }
+    
+    // Initial state
+    updateCheckboxStates();
+    
+    adminCheckbox.addEventListener('change', updateCheckboxStates);
+    groupAdminCheckbox.addEventListener('change', updateCheckboxStates);
+});
+</script>
+{% endblock %}

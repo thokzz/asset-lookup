@@ -1,0 +1,481 @@
+{% extends 'layout.html' %}
+
+{% block title %}Assets{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-list me-2"></i> Assets
+        {% if status_filter == 'good_standing' %}
+        <span class="text-success">(Good Standing)</span>
+        {% elif status_filter == 'active' %}
+        <span class="text-success">(Active)</span>
+        {% elif status_filter == 'expiring' %}
+        <span class="text-warning">(Expiring Soon)</span>
+        {% elif status_filter == 'expired' %}
+        <span class="text-danger">(Expired)</span>
+        {% endif %}
+        <small class="text-muted">{{ assets.total }} total</small>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('asset.export_assets') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-file-export me-1"></i> Export
+            </a>
+            {% if current_user.has_permission('CREATE') %}
+            <a href="{{ url_for('asset.import_assets') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-file-import me-1"></i> Import
+            </a>
+            {% endif %}
+        </div>
+        {% if current_user.has_permission('CREATE') %}
+        <a href="{{ url_for('asset.create_asset') }}" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Asset
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filters and Controls -->
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="card-title mb-0">Filter & Sort Assets</h5>
+            </div>
+            <div class="col-auto">
+                <!-- Bulk Actions -->
+                <button type="button" class="btn btn-sm btn-danger" id="bulkDeleteBtn" disabled 
+                        data-bs-toggle="modal" data-bs-target="#bulkDeleteModal">
+                    <i class="fas fa-trash me-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('asset.asset_list') }}" method="get" class="row g-3" id="filterForm">
+            <!-- Preserve current page when filtering -->
+            <input type="hidden" name="page" value="1">
+            
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select form-select-sm" id="status" name="status">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                    <option value="good_standing" {% if status_filter == 'good_standing' %}selected{% endif %}>Good Standing</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="expiring" {% if status_filter == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                    <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="tag" class="form-label">Tag</label>
+                <select class="form-select form-select-sm" id="tag" name="tag">
+                    <option value="all" {% if tag_filter == 'all' %}selected{% endif %}>All Tags</option>
+                    {% for tag in tags %}
+                    <option value="{{ tag.id }}" {% if tag_filter == tag.id %}selected{% endif %}>{{ tag.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="vendor" class="form-label">Vendor</label>
+                <select class="form-select form-select-sm" id="vendor" name="vendor">
+                    <option value="all" {% if vendor_filter == 'all' %}selected{% endif %}>All Vendors</option>
+                    {% for vendor in vendors %}
+                    <option value="{{ vendor[0] }}" {% if vendor_filter == vendor[0] %}selected{% endif %}>{{ vendor[0] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="sort_by" class="form-label">Sort By</label>
+                <select class="form-select form-select-sm" id="sort_by" name="sort_by">
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Date Created</option>
+                    <option value="product_name" {% if sort_by == 'product_name' %}selected{% endif %}>Product Name</option>
+                    <option value="purchase_date" {% if sort_by == 'purchase_date' %}selected{% endif %}>Purchase Date</option>
+                    <option value="warranty_expiry_date" {% if sort_by == 'warranty_expiry_date' %}selected{% endif %}>Expiry Date</option>
+                    <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price</option>
+                    <option value="vendor_company" {% if sort_by == 'vendor_company' %}selected{% endif %}>Vendor</option>
+                </select>
+            </div>
+            
+            <div class="col-md-1">
+                <label for="sort_dir" class="form-label">Order</label>
+                <select class="form-select form-select-sm" id="sort_dir" name="sort_dir">
+                    <option value="desc" {% if sort_dir == 'desc' %}selected{% endif %}>↓ Desc</option>
+                    <option value="asc" {% if sort_dir == 'asc' %}selected{% endif %}>↑ Asc</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="per_page" class="form-label">Per Page</label>
+                <select class="form-select form-select-sm" id="per_page" name="per_page">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+            </div>
+            
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-outline-secondary btn-sm d-block" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+        
+        <!-- Search row -->
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <form action="{{ url_for('asset.asset_list') }}" method="get" class="d-flex">
+                    <!-- Preserve current filters -->
+                    <input type="hidden" name="status" value="{{ status_filter }}">
+                    <input type="hidden" name="tag" value="{{ tag_filter }}">
+                    <input type="hidden" name="vendor" value="{{ vendor_filter }}">
+                    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                    <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+                    <input type="hidden" name="page" value="1">
+                    
+                    <input type="text" class="form-control form-control-sm" name="q" value="{{ search_query }}" 
+                           placeholder="Search assets...">
+                    <button class="btn btn-outline-secondary btn-sm ms-2" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    {% if search_query %}
+                    <a href="{{ url_for('asset.asset_list', status=status_filter, tag=tag_filter, vendor=vendor_filter, sort_by=sort_by, sort_dir=sort_dir, per_page=per_page) }}" 
+                       class="btn btn-outline-secondary btn-sm ms-1">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <!-- Pagination Info -->
+                {% if assets.items %}
+                <small class="text-muted">
+                    Showing {{ assets.per_page * (assets.page - 1) + 1 }} - 
+                    {{ assets.per_page * (assets.page - 1) + assets.items|length }} 
+                    of {{ assets.total }} assets
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assets Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if assets.items %}
+        <form id="bulkActionForm" action="{{ url_for('asset.bulk_delete_assets') }}" method="post">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAll" class="form-check-input">
+                            </th>
+                            <th>Product</th>
+                            <th>Serial Number</th>
+                            <th>Purchase Date</th>
+                            <th>Warranty</th>
+                            <th>Price</th>
+                            <th>Vendor</th>
+                            <th>Tags</th>
+                            <th>Status</th>
+                            <th style="width: 120px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in assets.items %}
+                        <tr>
+                            <td>
+                                {% if current_user|can_delete_asset(asset) %}
+                                <input type="checkbox" name="selected_assets" value="{{ asset.id }}" 
+                                       class="form-check-input asset-checkbox">
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ asset.product_name }}</div>
+                                {% if asset.product_model %}
+                                <div class="text-muted small">{{ asset.product_model }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ asset.serial_number or '-' }}</td>
+                            <td>
+                                {% if asset.purchase_date %}
+                                {{ asset.purchase_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if asset.warranty_duration %}
+                                {{ asset.warranty_duration }} months
+                                {% if asset.warranty_expiry_date %}
+                                <div class="text-muted small">Expires: {{ asset.warranty_expiry_date.strftime('%Y-%m-%d') }}</div>
+                                {% else %}
+                                <div class="text-muted small">Expiry date not calculated</div>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">No warranty info</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if asset.price %}
+                                {{ asset.currency_symbol }}{{ "%.2f"|format(asset.price) }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ asset.vendor_company or '-' }}</td>
+                            <td>
+                                {% for tag in asset.tags %}
+                                <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if asset.status == 'Active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif asset.status == 'Expiring Soon' %}
+                                <span class="badge bg-warning">Expiring Soon ({{ asset.days_remaining }} days)</span>
+                                {% elif asset.status == 'Expired' %}
+                                <span class="badge bg-danger">Expired</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ asset.status or 'Unknown' }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" 
+                                       class="btn btn-outline-primary btn-sm" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    {% if current_user.has_permission('EDIT', asset) %}
+                                    <a href="{{ url_for('asset.edit_asset', asset_id=asset.id) }}" 
+                                       class="btn btn-outline-secondary btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if current_user|can_delete_asset(asset) %}
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ asset.id }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    
+                                    <!-- Individual Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ asset.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirm Deletion</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete <strong>{{ asset.product_name }}</strong>?
+                                                    This action cannot be undone.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('asset.delete_asset', asset_id=asset.id) }}" method="post" style="display: inline;">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        
+        <!-- Pagination -->
+        {% if assets.pages > 1 %}
+        <div class="card-footer">
+            <nav aria-label="Asset pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    <!-- Previous page -->
+                    {% if assets.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('asset.asset_list', 
+                            page=assets.prev_num, status=status_filter, tag=tag_filter, 
+                            vendor=vendor_filter, q=search_query, sort_by=sort_by, 
+                            sort_dir=sort_dir, per_page=per_page) }}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Page numbers -->
+                    {% for page_num in assets.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num != assets.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('asset.asset_list', 
+                                    page=page_num, status=status_filter, tag=tag_filter, 
+                                    vendor=vendor_filter, q=search_query, sort_by=sort_by, 
+                                    sort_dir=sort_dir, per_page=per_page) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Next page -->
+                    {% if assets.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('asset.asset_list', 
+                            page=assets.next_num, status=status_filter, tag=tag_filter, 
+                            vendor=vendor_filter, q=search_query, sort_by=sort_by, 
+                            sort_dir=sort_dir, per_page=per_page) }}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- No assets found -->
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No assets found</h5>
+            <p class="text-muted">
+                {% if search_query or status_filter != 'all' or tag_filter != 'all' or vendor_filter != 'all' %}
+                Try adjusting your filters or search terms.
+                <br>
+                <a href="{{ url_for('asset.asset_list') }}" class="btn btn-outline-secondary btn-sm mt-2">
+                    <i class="fas fa-times me-1"></i> Clear All Filters
+                </a>
+                {% else %}
+                No assets have been added yet.
+                {% if current_user.has_permission('CREATE') %}
+                <br>
+                <a href="{{ url_for('asset.create_asset') }}" class="btn btn-primary btn-sm mt-2">
+                    <i class="fas fa-plus me-1"></i> Add Your First Asset
+                </a>
+                {% endif %}
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Bulk Delete Modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Bulk Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                <p>Are you sure you want to delete <strong><span id="bulkDeleteCount">0</span></strong> selected asset(s)?</p>
+                <p class="text-muted small">Only assets you have permission to delete will be removed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmBulkDelete">
+                    <i class="fas fa-trash me-1"></i> Delete Selected Assets
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    const filterForm = document.getElementById('filterForm');
+    const filterInputs = filterForm.querySelectorAll('select');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => {
+            filterForm.submit();
+        });
+    });
+    
+    // Bulk selection functionality
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const bulkDeleteCountSpan = document.getElementById('bulkDeleteCount');
+    const confirmBulkDeleteBtn = document.getElementById('confirmBulkDelete');
+    const bulkActionForm = document.getElementById('bulkActionForm');
+    
+    function updateBulkActions() {
+        const selectedCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+        const selectedCount = selectedCheckboxes.length;
+        
+        selectedCountSpan.textContent = selectedCount;
+        bulkDeleteCountSpan.textContent = selectedCount;
+        bulkDeleteBtn.disabled = selectedCount === 0;
+        
+        // Update select all checkbox state
+        if (selectedCount === 0) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = false;
+        } else if (selectedCount === assetCheckboxes.length) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = true;
+        } else {
+            selectAllCheckbox.indeterminate = true;
+            selectAllCheckbox.checked = false;
+        }
+    }
+    
+    // Select all functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            assetCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateBulkActions();
+        });
+    }
+    
+    // Individual checkbox change
+    assetCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActions);
+    });
+    
+    // Confirm bulk delete
+    if (confirmBulkDeleteBtn) {
+        confirmBulkDeleteBtn.addEventListener('click', function() {
+            bulkActionForm.submit();
+        });
+    }
+    
+    // Initial update
+    updateBulkActions();
+});
+</script>
+{% endblock %}

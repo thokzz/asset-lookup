@@ -1,0 +1,85 @@
+# app/templates/emails/enhanced_warranty_alert.txt
+
+========================================
+{{ urgency }} - WARRANTY EXPIRATION ALERT
+========================================
+
+{{ notification_type|title }} notification for asset warranty expiring soon
+
+ASSET INFORMATION:
+------------------
+Product Name: {{ asset.product_name }}
+{% if asset.product_model %}Model: {{ asset.product_model }}
+{% endif %}{% if asset.serial_number %}Serial Number: {{ asset.serial_number }}
+{% endif %}Purchase Date: {{ asset.purchase_date.strftime('%B %d, %Y') }}
+Warranty Duration: {{ asset.warranty_duration }} months
+Warranty Expires: {{ expiry_date }}
+{% if asset.location %}Location: {{ asset.location }}
+{% endif %}{% if asset.vendor_company %}Vendor: {{ asset.vendor_company }}
+{% endif %}
+
+{% if is_expired %}
+========================================
+⚠️  WARRANTY EXPIRED
+========================================
+
+This asset's warranty has already expired {{ days_remaining|abs }} days ago.
+
+Please take appropriate action to either renew the warranty or update the asset status.
+
+{% elif is_critical %}
+========================================
+🚨 CRITICAL - WARRANTY EXPIRES VERY SOON
+========================================
+
+This asset's warranty expires in {{ days_remaining }} days!
+
+Immediate action is required to avoid service interruption.
+
+{% elif notification_type == 'secondary' %}
+========================================
+⏰ FOLLOW-UP REMINDER
+========================================
+
+This is a follow-up reminder about this asset's warranty expiration.
+
+The warranty expires in {{ days_remaining }} days. Please take action soon.
+
+{% endif %}
+
+COUNTDOWN:
+----------
+{% if is_expired %}
+EXPIRED - {{ days_remaining|abs }} days ago
+{% else %}
+{{ days_remaining }} day{{ 's' if days_remaining != 1 else '' }} remaining until warranty expires
+{% endif %}
+
+ACTIONS AVAILABLE:
+------------------
+Please visit one of the following links to let us know your decision:
+
+✅ Warranty Renewed:
+{{ response_urls.renewed }}
+
+❌ Will Not Renew:
+{{ response_urls.will_not_renew }}
+
+⏳ Action Pending:
+{{ response_urls.pending }}
+
+🔕 Disable Notifications for this Asset:
+{{ response_urls.disable_notifications }}
+
+========================================
+Asset Lookup System
+========================================
+
+This email was sent on {{ current_date }} to {{ recipient_email }}
+
+If you believe this email was sent in error, please contact your system administrator.
+
+This is an automated message from the Asset Lookup system. 
+Please do not reply directly to this email.
+
+For support, please contact your system administrator.

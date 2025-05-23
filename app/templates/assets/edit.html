@@ -1,0 +1,365 @@
+{% extends 'layout.html' %}
+
+{% block title %}Edit Asset{% endblock %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-edit me-2"></i> Edit Asset: {{ asset.product_name }}
+    </h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('asset.edit_asset', asset_id=asset.id) }}" enctype="multipart/form-data">
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-md-6">
+                    <h5 class="mb-3">Product Information</h5>
+                    
+                    <div class="mb-3">
+                        <label for="product_name" class="form-label">Product Name *</label>
+                        <input type="text" class="form-control" id="product_name" name="product_name" 
+                               value="{{ asset.product_name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="product_model" class="form-label">Product Model</label>
+                        <input type="text" class="form-control" id="product_model" name="product_model" 
+                               value="{{ asset.product_model }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="internal_asset_name" class="form-label">Internal Asset Name</label>
+                        <input type="text" class="form-control" id="internal_asset_name" name="internal_asset_name" 
+                               value="{{ asset.internal_asset_name }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="serial_number" class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" id="serial_number" name="serial_number" 
+                               value="{{ asset.serial_number }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" 
+                               value="{{ asset.location }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <div class="input-group">
+                            <select class="form-select" style="max-width: 100px;" id="currency_symbol" name="currency_symbol">
+                                <option value="$" {% if asset.currency_symbol == '$' %}selected{% endif %}>$ (USD)</option>
+                                <option value="€" {% if asset.currency_symbol == '€' %}selected{% endif %}>€ (EUR)</option>
+                                <option value="£" {% if asset.currency_symbol == '£' %}selected{% endif %}>£ (GBP)</option>
+                                <option value="¥" {% if asset.currency_symbol == '¥' %}selected{% endif %}>¥ (JPY/CNY)</option>
+                                <option value="₹" {% if asset.currency_symbol == '₹' %}selected{% endif %}>₹ (INR)</option>
+                                <option value="₱" {% if asset.currency_symbol == '₱' %}selected{% endif %}>₱ (PHP)</option>
+                                <option value="custom" {% if asset.currency_symbol and asset.currency_symbol not in ['$', '€', '£', '¥', '₹', '₱'] %}selected{% endif %}>Custom</option>
+                            </select>
+                            <input type="text" class="form-control custom-currency" id="custom_currency" name="custom_currency" 
+                                  placeholder="Custom symbol" style="max-width: 150px; display: none;" 
+                                  value="{{ asset.currency_symbol if asset.currency_symbol and asset.currency_symbol not in ['$', '€', '£', '¥', '₹', '₱'] }}">
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" 
+                                   value="{{ asset.price }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div class="col-md-6">
+                    <h5 class="mb-3">Warranty Details</h5>
+                    
+                    <div class="mb-3">
+                        <label for="purchase_date" class="form-label">Purchase Date *</label>
+                        <input type="date" class="form-control date-picker" id="purchase_date" name="purchase_date" 
+                               value="{{ asset.purchase_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="warranty_duration" class="form-label">Warranty Duration (months) *</label>
+                        <input type="number" class="form-control" id="warranty_duration" name="warranty_duration" 
+                               value="{{ asset.warranty_duration }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="alert_period" class="form-label">Alert Period (days before expiry)</label>
+                        <input type="number" class="form-control" id="alert_period" name="alert_period" 
+                               value="{{ asset.alert_period }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="vendor_company" class="form-label">Vendor Company</label>
+                        <input type="text" class="form-control" id="vendor_company" name="vendor_company" 
+                               value="{{ asset.vendor_company }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="vendor_email" class="form-label">Vendor Email</label>
+                        <input type="email" class="form-control" id="vendor_email" name="vendor_email" 
+                               value="{{ asset.vendor_email }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="disposal_date" class="form-label">Disposal Date</label>
+                        <input type="date" class="form-control date-picker" id="disposal_date" name="disposal_date" 
+                               value="{{ asset.disposal_date.strftime('%Y-%m-%d') if asset.disposal_date else '' }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Additional Information</h5>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ asset.notes }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tags" class="form-label">Tags</label>
+                                <select class="form-select select2-tags" id="tags" name="tags" multiple>
+                                    {% for tag in tags %}
+                                    <option value="{{ tag.id }}" {% if tag in asset.tags %}selected{% endif %}>{{ tag.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="assigned_user_id" class="form-label">Assigned User</label>
+                                <select class="form-control select2" id="assigned_user_id" name="assigned_user_id">
+                                    <option value="">-- None --</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" {% if asset.assigned_user_id == user.id %}selected{% endif %}>
+                                        {{ user.full_name }} ({{ user.username }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="groups" class="form-label">Assigned Groups</label>
+                                <select class="form-control select2-tags" id="groups" name="groups" multiple>
+                                    {% for group in groups %}
+                                    <option value="{{ group.id }}" {% if group in asset.assigned_groups %}selected{% endif %}>{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notification_users" class="form-label">Notification Recipients</label>
+                                <select class="form-control select2-users" id="notification_users" name="notification_users" multiple>
+                                    {% for user in users %}
+                                    <option value="{{ user.email }}" data-user-id="{{ user.id }}" 
+                                        {% if asset.notification_emails and user.email in asset.notification_emails %}selected{% endif %}>
+                                        {{ user.full_name }} ({{ user.email }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">Select users who should receive warranty expiration alerts for this asset</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual email input as fallback -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="user_email" class="form-label">Additional Email Addresses</label>
+                                <input type="text" class="form-control" id="user_email" name="user_email" 
+                                       value="{{ asset.additional_emails or '' }}" 
+                                       placeholder="Additional emails (comma-separated)">
+                                <small class="form-text text-muted">Optional: Add external email addresses not in the user list (comma-separated)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="files" class="form-label">Upload Additional Files</label>
+                        <input type="file" class="form-control" id="files" name="files" multiple>
+                        <small class="form-text text-muted">
+                            Upload receipts, invoices, manuals, or other relevant documents. 
+                            Maximum file size: 10MB. Accepted formats: PDF, DOC, XLS, TXT, PNG, JPG, ZIP, RAR.
+                        </small>
+                    </div>
+                    
+                    {% if asset.files %}
+                    <div class="mb-3">
+                        <label class="form-label">Current Files</label>
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    {% for file in asset.files %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center">
+                                                {% if file.file_type == 'application/pdf' %}
+                                                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                                                {% elif file.file_type == 'application/msword' or file.file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' %}
+                                                    <i class="fas fa-file-word text-primary me-2"></i>
+                                                {% elif file.file_type == 'application/vnd.ms-excel' or file.file_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' %}
+                                                    <i class="fas fa-file-excel text-success me-2"></i>
+                                                {% elif file.file_type == 'image/jpeg' or file.file_type == 'image/png' or file.file_type == 'image/gif' %}
+                                                    <i class="fas fa-file-image text-warning me-2"></i>
+                                                {% elif file.file_type == 'application/zip' or file.file_type == 'application/x-rar-compressed' %}
+                                                    <i class="fas fa-file-archive text-secondary me-2"></i>
+                                                {% else %}
+                                                    <i class="fas fa-file text-secondary me-2"></i>
+                                                {% endif %}
+                                                
+                                                <div>
+                                                    {{ file.filename }}
+                                                    <small class="d-block text-muted">{{ (file.file_size or 0) // 1024 }} KB • {{ file.uploaded_at.strftime('%Y-%m-%d') }}</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <a href="{{ url_for('static', filename='uploads/' + file.file_path.split('/')[-1]) }}" class="btn btn-sm btn-outline-primary" download="{{ file.filename }}">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        data-bs-toggle="modal" data-bs-target="#deleteFileModal{{ file.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                
+                                                <!-- Delete File Modal -->
+                                                <div class="modal fade" id="deleteFileModal{{ file.id }}" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Confirm Deletion</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Are you sure you want to delete the file <strong>{{ file.filename }}</strong>?
+                                                                This action cannot be undone.
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <form action="{{ url_for('asset.delete_file', asset_id=asset.id, file_id=file.id) }}" method="post">
+                                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            dropdownParent: $('body')
+        });
+        
+       $('.select2-tags').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            tags: true,
+            tokenSeparators: [',', ' '],
+            dropdownParent: $('body')
+        });
+        
+        // Initialize Select2 for notification users
+        $('.select2-users').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select users to notify about warranty expiration',
+            allowClear: true,
+            dropdownParent: $('body')
+        });
+        
+        // Initialize Flatpickr (date picker)
+        flatpickr(".date-picker", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+        
+        // Auto-select assigned user in notification recipients when assigned user changes
+        $('#assigned_user_id').on('change', function() {
+            const selectedUserId = $(this).val();
+            if (selectedUserId) {
+                // Find the corresponding user in notification users
+                const userEmail = $(`#notification_users option[data-user-id="${selectedUserId}"]`).val();
+                if (userEmail) {
+                    // Get current selections
+                    let currentSelections = $('#notification_users').val() || [];
+                    // Add the assigned user's email if not already selected
+                    if (!currentSelections.includes(userEmail)) {
+                        currentSelections.push(userEmail);
+                        $('#notification_users').val(currentSelections).trigger('change');
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelect = document.getElementById('currency_symbol');
+    const customCurrency = document.querySelector('.custom-currency');
+    
+    function toggleCustomCurrency() {
+        if (currencySelect.value === 'custom') {
+            customCurrency.style.display = 'block';
+        } else {
+            customCurrency.style.display = 'none';
+        }
+    }
+    
+    // Initial state
+    toggleCustomCurrency();
+    
+    // On change
+    currencySelect.addEventListener('change', toggleCustomCurrency);
+});
+</script>
+{% endblock %}

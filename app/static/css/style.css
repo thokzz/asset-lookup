@@ -1,0 +1,278 @@
+/* Main layout */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+}
+
+.container-fluid {
+    flex: 1 0 auto;
+}
+
+.footer {
+    flex-shrink: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    overflow-y: auto;
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: static;
+        height: auto;
+    }
+}
+
+/* Main content */
+main {
+    margin-bottom: 60px;
+}
+
+/* Cards */
+.card {
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+    border: none;
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Tables */
+.table th {
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* Status colors */
+.status-active {
+    color: #28a745;
+}
+
+.status-expiring {
+    color: #ffc107;
+}
+
+.status-expired {
+    color: #dc3545;
+}
+
+/* Form styles */
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Auth pages */
+.auth-form {
+    width: 100%;
+    max-width: 400px;
+    padding: 15px;
+    margin: auto;
+}
+
+.auth-form .card {
+    border-radius: 0.5rem;
+}
+
+/* Tag badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+}
+
+/* Detail view */
+.detail-header {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* File attachment styles */
+.attachment-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.attachment-icon {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+/* Progress bar for warranty */
+.warranty-progress {
+    height: 10px;
+    border-radius: 5px;
+}
+
+/* Timeline for warranty history */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    border: 2px solid #fff;
+}
+
+.timeline-item.active:before {
+    background-color: #28a745;
+}
+
+.timeline-item.warning:before {
+    background-color: #ffc107;
+}
+
+.timeline-item.danger:before {
+    background-color: #dc3545;
+}
+/* Add these styles to your style.css file */
+
+/* Navbar fixed positioning with significantly reduced height */
+.navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    padding: 0.15rem 1rem; /* Very compact padding */
+    min-height: 45px;     /* Smaller minimum height */
+}
+
+/* Reduce the container-fluid padding inside navbar */
+.navbar .container-fluid {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Make all navbar elements more compact */
+.navbar-brand {
+    padding: 0;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.navbar .nav-link {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.875rem; /* Smaller font */
+}
+
+/* Make form elements in navbar smaller */
+.navbar .form-control,
+.navbar .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    height: calc(1.5rem + 0.5rem + 2px);
+}
+
+/* Smaller dropdown toggle button */
+.navbar .dropdown-toggle {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Adjust spacing in nav items list */
+.navbar-nav {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.navbar-nav .nav-item {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Fix for navbar toggler button to be smaller */
+.navbar-toggler {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.875rem;
+}
+
+/* Main content adjustment to prevent overlap with fixed navbar */
+.container-fluid:not(.navbar .container-fluid) {
+    padding-top: 100px; /* Match the minimum navbar height */
+}
+
+/* Sidebar adjustment for fixed navbar */
+.sidebar {
+    position: fixed;
+    top: 38px; /* Match the minimum navbar height */
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    overflow-y: auto;
+}
+
+.page-title, h1.h2, .card-header h5.card-title {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: static;
+        height: auto;
+        padding-top: 0;
+    }
+    
+    main {
+        margin-top: 1.5rem;
+    }
+}
+
+/* Make sure the main content has appropriate spacing */
+main {
+    margin-bottom: 60px;
+}

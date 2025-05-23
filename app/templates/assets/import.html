@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Import Assets</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Upload a CSV file to import multiple assets at once.</p>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">CSV File</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                            <div class="form-text">
+                                The CSV file should have the following columns:
+                                <ul>
+                                    <li><strong>Product Name</strong> (required)</li>
+                                    <li><strong>Product Model</strong></li>
+                                    <li><strong>Internal Asset Name</strong></li>
+                                    <li><strong>Serial Number</strong></li>
+                                    <li><strong>Purchase Date</strong> (required, format: YYYY-MM-DD)</li>
+                                    <li><strong>Price</strong> (numeric)</li>
+                                    <li><strong>Currency Symbol</strong> (e.g., $, €, £, ¥, ₹, ₱)</li>
+                                    <li><strong>Warranty Duration (months)</strong> (required, numeric)</li>
+                                    <li><strong>Location</strong></li>
+                                    <li><strong>Vendor Company</strong></li>
+                                    <li><strong>Vendor Email</strong></li>
+                                    <li><strong>Notes</strong></li>
+                                    <li><strong>Disposal Date</strong> (format: YYYY-MM-DD)</li>
+                                    <li><strong>Alert Period (days)</strong> (numeric, default: 30)</li>
+                                    <li><strong>Tags</strong> (comma-separated list)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">Import Assets</button>
+                            <a href="{{ url_for('asset.asset_list') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-4">
+                        <h6>Sample CSV Format</h6>
+                        <pre class="bg-light p-3 rounded">
+Product Name,Product Model,Internal Asset Name,Serial Number,Purchase Date,Price,Currency Symbol,Warranty Duration (months),Location,Vendor Company,Vendor Email,Notes,Disposal Date,Alert Period (days),Tags
+Laptop Dell XPS,XPS 15,DEV-LAPTOP-001,SN12345,2023-01-15,1299.99,$,24,Main Office,Dell,support@dell.com,Developer laptop,,30,IT Equipment,Development
+Monitor LG,27GL850-B,DEV-MON-002,MN67890,2023-01-15,399.99,€,12,Main Office,LG,support@lg.com,Developer monitor,,30,IT Equipment,Peripherals
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

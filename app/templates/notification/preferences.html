@@ -1,0 +1,245 @@
+<!-- app/templates/notification/preferences.html -->
+{% extends "layout.html" %}
+
+{% block title %}Notification Preferences{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-bell me-2"></i> Notification Preferences
+    </h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Warranty Expiration Alerts</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <p><i class="fas fa-info-circle me-2"></i> Asset Lookup will automatically notify you about warranties that are expiring soon. You can customize how and when you receive these notifications below.</p>
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="frequency" class="form-label fw-bold">Notification Frequency</label>
+                        <select class="form-select" id="frequency" name="frequency">
+                            <option value="once" {% if preferences.frequency == 'once' %}selected{% endif %}>Once Only (when asset reaches alert period)</option>
+                            <option value="daily" {% if preferences.frequency == 'daily' %}selected{% endif %}>Once Daily</option>
+                            <option value="twice_daily" {% if preferences.frequency == 'twice_daily' %}selected{% endif %}>Twice Daily</option>
+                            <option value="weekly" {% if preferences.frequency == 'weekly' %}selected{% endif %}>Once Weekly</option>
+                        </select>
+                        <div class="form-text mt-2">
+                            <ul class="mb-0 ps-3">
+                                <li><strong>Once Only</strong>: Send a single notification when an asset first enters its alert period (typically 30 days before expiry)</li>
+                                <li><strong>Once Daily</strong>: Send notifications daily at your preferred time for assets in the alert period</li>
+                                <li><strong>Twice Daily</strong>: Send notifications twice a day at your specified times for assets in the alert period</li>
+                                <li><strong>Once Weekly</strong>: Send notifications on your selected day of the week for assets in the alert period</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4" id="weeklyOptions" style="display: none;">
+                        <label for="day_of_week" class="form-label fw-bold">Preferred Day of Week</label>
+                        <select class="form-select" id="day_of_week" name="day_of_week">
+                            {% for day_num, day_name in days_of_week.items() %}
+                            <option value="{{ day_num }}" {% if preferences.day_of_week == day_num %}selected{% endif %}>{{ day_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mt-2">
+                            You'll receive notifications for expiring assets on this day each week
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="preferred_time" class="form-label fw-bold">Preferred Time</label>
+                        <input type="time" class="form-control" id="preferred_time" name="preferred_time" value="{{ preferences.preferred_time }}">
+                        <div class="form-text mt-2">
+                            <span id="first_time_description">This is when you'll receive your notification each day</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4" id="secondTimeOption" style="display: none;">
+                        <label for="preferred_second_time" class="form-label fw-bold">Second Preferred Time</label>
+                        <input type="time" class="form-control" id="preferred_second_time" name="preferred_second_time" value="{{ preferences.preferred_second_time }}">
+                        <div class="form-text mt-2">
+                            This is when you'll receive your second notification each day
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-secondary">
+                        <h6><i class="fas fa-info-circle me-2"></i> How Notification Triggers Work</h6>
+                        <p class="mb-1">Asset Lookup checks for expiring warranties and triggers notifications based on:</p>
+                        <ol class="mb-0">
+                            <li>The <strong>asset alert period</strong> (typically 30 days before expiry)</li>
+                            <li>Your selected <strong>notification frequency</strong></li>
+                            <li>Your <strong>preferred time</strong> settings</li>
+                        </ol>
+                        <hr class="my-2">
+                        <p class="mb-0">Notifications continue until the warranty expires or you mark the asset as renewed/handled.</p>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Notification Preferences
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Notifications</h5>
+                <span class="badge bg-secondary">{{ notifications|length }} notifications</span>
+            </div>
+            <div class="card-body p-0">
+                {% if notifications %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date Sent</th>
+                                <th>Asset</th>
+                                <th>Status</th>
+                                <th>Response</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notification in notifications %}
+                            <tr>
+                                <td>{{ notification.sent_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if notification.asset %}
+                                    <a href="{{ url_for('asset.asset_detail', asset_id=notification.asset.id) }}">
+                                        {{ notification.asset.product_name }}
+                                        <div class="text-muted small">
+                                            {% if notification.asset.days_remaining > 0 %}
+                                            Expires in {{ notification.asset.days_remaining }} days
+                                            {% else %}
+                                            Expired {{ notification.asset.days_remaining|abs }} days ago
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">Asset Deleted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if notification.status == 'sent' %}
+                                    <span class="badge bg-success">Sent</span>
+                                    {% elif notification.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% elif notification.status == 'acknowledged' %}
+                                    <span class="badge bg-primary">Acknowledged</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ notification.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if notification.response %}
+                                    <span class="badge bg-info">{{ notification.response|replace('_', ' ')|title }}</span>
+                                    {% if notification.response_date %}
+                                    <div class="text-muted small">{{ notification.response_date.strftime('%Y-%m-%d %H:%M') }}</div>
+                                    {% endif %}
+                                    {% elif notification.status == 'sent' %}
+                                    <span class="text-muted">Awaiting response</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center">
+                    <p class="text-muted mb-0"><i class="fas fa-bell-slash me-2"></i> No recent notifications.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Notification Guide</h5>
+            </div>
+            <div class="card-body">
+                <h6><i class="fas fa-question-circle me-2"></i> When will I receive notifications?</h6>
+                <p>You'll be notified about assets that are expiring within their alert period (typically 30 days before expiry).</p>
+                
+                <h6><i class="fas fa-calendar-alt me-2"></i> What triggers a notification?</h6>
+                <p>Notifications are triggered when:</p>
+                <ul>
+                    <li>An asset enters its alert period (first becomes "expiring soon")</li>
+                    <li>According to your frequency settings (once, daily, twice-daily, or weekly)</li>
+                    <li>At your specified time(s) of day</li>
+                </ul>
+                
+                <h6><i class="fas fa-clock me-2"></i> When do notifications stop?</h6>
+                <p>Notifications will stop when:</p>
+                <ul>
+                    <li>You respond to a notification (mark as renewed, will not renew, or disable notifications)</li>
+                    <li>The warranty expires (passes its expiration date)</li>
+                    <li>You set the notification frequency to "Once Only" and you've already received the notification</li>
+                </ul>
+                
+                <h6><i class="fas fa-sliders-h me-2"></i> Managing Notification Settings</h6>
+                <p>You can customize your notification experience by:</p>
+                <ul>
+                    <li>Changing the frequency of notifications</li>
+                    <li>Setting your preferred time(s) for receiving alerts</li>
+                    <li>Responding to notifications to mark them handled</li>
+                    <li>Setting asset-specific alert periods (in the asset's settings)</li>
+                </ul>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Remember to keep your email address up to date to ensure you receive notifications properly.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include JavaScript for form dynamics -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const frequencySelect = document.getElementById('frequency');
+    const weeklyOptions = document.getElementById('weeklyOptions');
+    const secondTimeOption = document.getElementById('secondTimeOption');
+    const firstTimeDescription = document.getElementById('first_time_description');
+    
+    // Initial state
+    updateFormVisibility();
+    
+    // Update on change
+    frequencySelect.addEventListener('change', updateFormVisibility);
+    
+    function updateFormVisibility() {
+        const frequency = frequencySelect.value;
+        
+        // Show/hide weekly day selection
+        if (frequency === 'weekly') {
+            weeklyOptions.style.display = 'block';
+            firstTimeDescription.textContent = "This is when you'll receive your notification on your selected day";
+        } else {
+            weeklyOptions.style.display = 'none';
+        }
+        
+        // Show/hide second time selection
+        if (frequency === 'twice_daily') {
+            secondTimeOption.style.display = 'block';
+            firstTimeDescription.textContent = "This is when you'll receive your first notification each day";
+        } else if (frequency === 'daily') {
+            firstTimeDescription.textContent = "This is when you'll receive your notification each day";
+            secondTimeOption.style.display = 'none';
+        } else if (frequency === 'once') {
+            firstTimeDescription.textContent = "This is when you'll receive your one-time notification";
+            secondTimeOption.style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %}

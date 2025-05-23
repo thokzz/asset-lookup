@@ -1,0 +1,315 @@
+{% extends 'layout.html' %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-history me-2"></i> Audit Logs
+    </h1>
+    <div class="text-muted">
+        Current time: <span id="current-time">{{ now|format_datetime }}</span>
+        <small class="ms-2">({{ config.APP_TIMEZONE }})</small>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Filter Logs</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('admin.audit_logs') }}" method="get" id="filterForm">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="action" class="form-label">Action</label>
+                        <select class="form-select" id="action" name="action">
+                            <option value="">All Actions</option>
+                            {% for action in actions %}
+                            <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>{{ action }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="resource" class="form-label">Resource</label>
+                        <select class="form-select" id="resource" name="resource">
+                            <option value="">All Resources</option>
+                            {% for resource in resources %}
+                            <option value="{{ resource }}" {% if resource_filter == resource %}selected{% endif %}>{{ resource }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="user" class="form-label">User</label>
+                        <input type="text" class="form-control" id="user" name="user" value="{{ user_filter }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            {% for status in statuses %}
+                            <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="from_date" class="form-label">From Date</label>
+                        <input type="text" class="form-control date-picker" id="from_date" name="from_date" value="{{ from_date }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="to_date" class="form-label">To Date</label>
+                        <input type="text" class="form-control date-picker" id="to_date" name="to_date" value="{{ to_date }}">
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="mb-3 w-100">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-filter me-1"></i> Apply Filters
+                        </button>
+                        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Logs Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.timestamp|format_datetime }}</td>
+                        <td>{{ log.username }}</td>
+                        <td>
+                            {% if log.action == 'CREATE' %}
+                            <span class="badge bg-success">{{ log.action }}</span>
+                            {% elif log.action == 'UPDATE' %}
+                            <span class="badge bg-info">{{ log.action }}</span>
+                            {% elif log.action == 'DELETE' %}
+                            <span class="badge bg-danger">{{ log.action }}</span>
+                            {% elif log.action == 'LOGIN' %}
+                            <span class="badge bg-primary">{{ log.action }}</span>
+                            {% elif log.action == 'LOGIN_FAILED' %}
+                            <span class="badge bg-warning">{{ log.action }}</span>
+                            {% elif log.action == 'LOGOUT' %}
+                            <span class="badge bg-secondary">{{ log.action }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ log.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.resource_type }}</td>
+                        <td>{{ log.description }}</td>
+                        <td>
+                            {% if log.status == 'success' %}
+                            <span class="badge bg-success">Success</span>
+                            {% elif log.status == 'failure' %}
+                            <span class="badge bg-danger">Failure</span>
+                            {% elif log.status == 'warning' %}
+                            <span class="badge bg-warning">Warning</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ log.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" 
+                                    data-bs-toggle="modal" data-bs-target="#detailsModal{{ log.id }}">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                            
+                            <!-- Details Modal -->
+                            <div class="modal fade" id="detailsModal{{ log.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Log Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <h6>Basic Information</h6>
+                                                <table class="table table-bordered table-sm">
+                                                    <tr>
+                                                        <th width="150">ID</th>
+                                                        <td>{{ log.id }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Timestamp</th>
+                                                        <td>{{ log.timestamp|format_datetime('%Y-%m-%d %H:%M:%S.%f') }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Time (UTC)</th>
+                                                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>User</th>
+                                                        <td>{{ log.username }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Action</th>
+                                                        <td>{{ log.action }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Resource Type</th>
+                                                        <td>{{ log.resource_type }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Resource ID</th>
+                                                        <td>{{ log.resource_id }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Status</th>
+                                                        <td>{{ log.status }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>IP Address</th>
+                                                        <td>{{ log.ip_address or 'N/A' }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <h6>Description</h6>
+                                                <div class="p-3 bg-light rounded">
+                                                    {{ log.description or 'No description provided' }}
+                                                </div>
+                                            </div>
+                                            
+                                            {% if log.details %}
+                                            <div class="mb-3">
+                                                <h6>Details</h6>
+                                                <div class="p-3 bg-light rounded">
+                                                    <pre class="mb-0" style="white-space: pre-wrap;">{{ log.details }}</pre>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if log.user_agent %}
+                                            <div>
+                                                <h6>User Agent</h6>
+                                                <div class="p-3 bg-light rounded small text-muted" style="word-break: break-all;">
+                                                    {{ log.user_agent }}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i> No audit logs found
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if logs.pages > 1 %}
+    <div class="card-footer">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item {% if not logs.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.prev_num, action=action_filter, resource=resource_filter, user=user_filter, status=status_filter, from_date=from_date, to_date=to_date) if logs.has_prev else '#' }}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+                
+                {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.audit_logs', page=page_num, action=action_filter, resource=resource_filter, user=user_filter, status=status_filter, from_date=from_date, to_date=to_date) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                <li class="page-item {% if not logs.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.next_num, action=action_filter, resource=resource_filter, user=user_filter, status=status_filter, from_date=from_date, to_date=to_date) if logs.has_next else '#' }}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Flatpickr (date picker)
+        flatpickr(".date-picker", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+        
+        // Update current time every minute
+        function updateCurrentTime() {
+            fetch('/api/current_time')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('current-time').textContent = data.current_time;
+                })
+                .catch(error => {
+                    console.error('Error fetching current time:', error);
+                });
+        }
+        
+        // Update time every minute
+        setInterval(updateCurrentTime, 60000);
+    });
+</script>
+{% endblock %}

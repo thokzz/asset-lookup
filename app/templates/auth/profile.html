@@ -1,0 +1,298 @@
+{% extends "layout.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-user me-2"></i> My Profile
+    </h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Profile Information Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-id-card me-2"></i> Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ current_user.first_name or '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ current_user.last_name or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ current_user.email }}" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="currency_symbol" class="form-label">Preferred Currency</label>
+                                <select class="form-select" id="currency_symbol" name="currency_symbol">
+                                    <option value="$" {% if current_user.currency_symbol == '$' %}selected{% endif %}>$ (USD)</option>
+                                    <option value="€" {% if current_user.currency_symbol == '€' %}selected{% endif %}>€ (EUR)</option>
+                                    <option value="£" {% if current_user.currency_symbol == '£' %}selected{% endif %}>£ (GBP)</option>
+                                    <option value="¥" {% if current_user.currency_symbol == '¥' %}selected{% endif %}>¥ (JPY)</option>
+                                    <option value="₱" {% if current_user.currency_symbol == '₱' %}selected{% endif %}>₱ (PHP)</option>
+                                    <option value="custom" {% if current_user.currency_symbol not in ['$', '€', '£', '¥', '₱'] %}selected{% endif %}>Custom</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3" id="custom-currency-group" style="display: none;">
+                                <label for="custom_currency" class="form-label">Custom Currency Symbol</label>
+                                <input type="text" class="form-control" id="custom_currency" name="custom_currency" 
+                                       maxlength="3" placeholder="e.g., ₹, kr, zł"
+                                       value="{% if current_user.currency_symbol not in ['$', '€', '£', '¥', '₱'] %}{{ current_user.currency_symbol }}{% endif %}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_format" class="form-label">Date Format</label>
+                                <select class="form-select" id="date_format" name="date_format">
+                                    <option value="MM/DD/YYYY" {% if current_user.date_format == 'MM/DD/YYYY' %}selected{% endif %}>MM/DD/YYYY (US)</option>
+                                    <option value="DD/MM/YYYY" {% if current_user.date_format == 'DD/MM/YYYY' %}selected{% endif %}>DD/MM/YYYY (EU)</option>
+                                    <option value="YYYY-MM-DD" {% if current_user.date_format == 'YYYY-MM-DD' %}selected{% endif %}>YYYY-MM-DD (ISO)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Password Change Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-key me-2"></i> Change Password
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="new_password" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-lock me-2"></i> Change Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Account Information Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i> Account Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Username:</label>
+                    <div>{{ current_user.username }}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Role:</label>
+                    <div>
+                        {% if current_user.is_admin %}
+                            <span class="badge bg-danger">Administrator</span>
+                        {% elif current_user.is_group_admin %}
+                            <span class="badge bg-warning">Group Admin</span>
+                        {% else %}
+                            <span class="badge bg-secondary">User</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Account Created:</label>
+                    <div>{{ current_user.created_at|format_datetime }}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Last Updated:</label>
+                    <div>{{ current_user.updated_at|format_datetime }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2FA Status Card -->
+        {% if two_factor_enabled %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt me-2"></i> Two-Factor Authentication
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if current_user.two_factor_setup_complete %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>2FA is active</strong><br>
+                        Your account is protected with two-factor authentication.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status:</label>
+                        <div>
+                            <span class="badge bg-success">
+                                <i class="fas fa-shield-alt me-1"></i> Enabled
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Authenticator App:</label>
+                        <div class="text-muted">
+                            <i class="fas fa-mobile-alt me-1"></i>
+                            Configured and active
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <small>
+                            <strong>Important:</strong> Keep your authenticator app secure. 
+                            If you lose access to your device, contact an administrator for assistance.
+                        </small>
+                    </div>
+                    
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>2FA setup required</strong><br>
+                        You must set up two-factor authentication to continue using your account.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status:</label>
+                        <div>
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i> Setup Required
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('auth.setup_2fa') }}" class="btn btn-warning">
+                            <i class="fas fa-shield-alt me-2"></i> Set Up 2FA Now
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt me-2"></i> Two-Factor Authentication
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-secondary">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>2FA not enabled</strong><br>
+                    Two-factor authentication is not currently enabled on this system.
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Status:</label>
+                    <div>
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-times me-1"></i> System Disabled
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Groups Card -->
+        {% if current_user.groups %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i> My Groups
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for group in current_user.groups %}
+                    <span class="badge bg-primary me-1 mb-1">{{ group.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelect = document.getElementById('currency_symbol');
+    const customCurrencyGroup = document.getElementById('custom-currency-group');
+    
+    function toggleCustomCurrency() {
+        if (currencySelect.value === 'custom') {
+            customCurrencyGroup.style.display = 'block';
+            document.getElementById('custom_currency').required = true;
+        } else {
+            customCurrencyGroup.style.display = 'none';
+            document.getElementById('custom_currency').required = false;
+        }
+    }
+    
+    // Initial check
+    toggleCustomCurrency();
+    
+    // Listen for changes
+    currencySelect.addEventListener('change', toggleCustomCurrency);
+});
+</script>
+{% endblock %}

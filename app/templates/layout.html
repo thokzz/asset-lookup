@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Asset Lookup</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block css %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+        {% include 'partials/navbar.html' %}
+    {% endif %}
+    
+    <div class="container-fluid py-4">
+        <div class="row">
+            {% if current_user.is_authenticated %}
+                <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                    {% include 'partials/sidebar.html' %}
+                </div>
+                
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <div class="alerts-container" style="margin-top: 20px; margin-bottom: 15px;">
+                        {% include 'partials/alerts.html' %}
+                    </div>
+                    {% block content %}{% endblock %}
+                </main>
+            {% else %}
+                <main class="col-12">
+                    {% include 'partials/alerts.html' %}
+                    {% block auth_content %}{% endblock %}
+                </main>
+            {% endif %}
+        </div>
+    </div>
+    
+    <footer class="footer mt-auto py-3 bg-light text-center">
+        <div class="container">
+            <span class="text-muted">© {{ current_year if current_year else '2025' }} Asset Lookup. All rights reserved.</span>
+        </div>
+    </footer>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,98 @@
+<div class="position-sticky pt-3">
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'asset.dashboard' %}active{% endif %}" href="{{ url_for('asset.dashboard') }}">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'asset.asset_list' %}active{% endif %}" href="{{ url_for('asset.asset_list') }}">
+                <i class="fas fa-list me-2"></i> All Assets
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('asset.asset_list', status='active') }}">
+                <i class="fas fa-check-circle text-success me-2"></i> Active Warranties
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('asset.asset_list', status='expiring') }}">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i> Expiring Soon
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('asset.asset_list', status='expired') }}">
+                <i class="fas fa-times-circle text-danger me-2"></i> Expired
+            </a>
+        </li>
+        
+        <li class="nav-item mt-3">
+            <div class="px-3 mb-2 text-muted small text-uppercase fw-bold">
+                Tools
+            </div>
+        </li>
+        {% if current_user.has_permission('CREATE') %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('asset.create_asset') }}">
+                <i class="fas fa-plus-circle me-2"></i> Add Asset
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'asset.tag_list' %}active{% endif %}" href="{{ url_for('asset.tag_list') }}">
+                <i class="fas fa-tags me-2"></i> Manage Tags
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('asset.export_assets') }}">
+                <i class="fas fa-file-export me-2"></i> Export Assets
+            </a>
+        </li>
+        {% if current_user.has_permission('CREATE') %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('asset.import_assets') }}">
+                <i class="fas fa-file-import me-2"></i> Import Assets
+            </a>
+        </li>
+        {% endif %}
+        
+        {% if current_user.is_admin %}
+        <li class="nav-item mt-3">
+            <div class="px-3 mb-2 text-muted small text-uppercase fw-bold">
+                Administration
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}" href="{{ url_for('admin.audit_logs') }}">
+                <i class="fas fa-history me-2"></i> Audit Logs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.admin_dashboard' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">
+                <i class="fas fa-cog me-2"></i> Admin Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.user_list' %}active{% endif %}" href="{{ url_for('admin.user_list') }}">
+                <i class="fas fa-users me-2"></i> Manage Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.group_list' %}active{% endif %}" href="{{ url_for('admin.group_list') }}">
+                <i class="fas fa-user-friends me-2"></i> Manage Groups
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
+                <i class="fas fa-sliders-h me-2"></i> System Settings
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('notification.admin_settings') }}">
+                <i class="fas fa-bell me-2"></i> Notification Settings
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</div>

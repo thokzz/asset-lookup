@@ -1,0 +1,474 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ asset.product_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-cube me-2"></i> {{ asset.product_name }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if current_user.has_permission('EDIT', asset) %}
+        <a href="{{ url_for('asset.edit_asset', asset_id=asset.id) }}" class="btn btn-sm btn-primary me-2">
+            <i class="fas fa-edit me-1"></i> Edit
+        </a>
+        {% endif %}
+        
+        {% if current_user|can_delete_asset(asset) %}
+        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="fas fa-trash me-1"></i> Delete
+        </button>
+        
+        <!-- Delete Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete <strong>{{ asset.product_name }}</strong>?
+                        This action cannot be undone.
+                        
+                        <!-- Show detailed permission context -->
+                        {% if not current_user.is_admin %}
+                            {% set permission_ctx = current_user|permission_context('DELETE', asset) %}
+                            {% if permission_ctx.reasons %}
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <small class="text-muted">
+                                    <strong>Delete Permission:</strong><br>
+                                    {% for reason in permission_ctx.reasons %}
+                                    <i class="fas fa-check-circle text-success me-1"></i> {{ reason }}<br>
+                                    {% endfor %}
+                                </small>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form action="{{ url_for('asset.delete_asset', asset_id=asset.id) }}" method="post">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<div class="row">
+    <!-- Main Info Column -->
+    <div class="col-md-8">
+        <!-- Status Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Warranty Status</h5>
+            </div>
+            <div class="card-body">
+                {% if asset.warranty_expiry_date %}
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center">
+                        {% if asset.status == 'Active' %}
+                        <div class="status-icon active mb-2">
+                            <i class="fas fa-check-circle fa-4x text-success"></i>
+                        </div>
+                        <h4 class="text-success">Active</h4>
+                        <p class="text-muted">{{ asset.days_remaining }} days remaining</p>
+                        {% elif asset.status == 'Expiring Soon' %}
+                        <div class="status-icon warning mb-2">
+                            <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                        </div>
+                        <h4 class="text-warning">Expiring Soon</h4>
+                        <p class="text-muted">{{ asset.days_remaining }} days remaining</p>
+                        {% else %}
+                        <div class="status-icon expired mb-2">
+                            <i class="fas fa-times-circle fa-4x text-danger"></i>
+                        </div>
+                        <h4 class="text-danger">Expired</h4>
+                        <p class="text-muted">Expired {{ asset.days_remaining|abs }} days ago</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Purchase Date</small>
+                                <small>Expiry Date</small>
+                            </div>
+                            <div class="progress warranty-progress">
+                                {% if asset.status == 'Active' %}
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ (asset.warranty_duration - asset.days_remaining) / asset.warranty_duration * 100 }}%"></div>
+                                {% elif asset.status == 'Expiring Soon' %}
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ (asset.warranty_duration - asset.days_remaining) / asset.warranty_duration * 100 }}%"></div>
+                                {% else %}
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small>{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else 'N/A' }}</small>
+                                <small>{{ asset.warranty_expiry_date.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div class="mb-2 fw-bold">Purchase Date</div>
+                                <div>{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else 'Not set' }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2 fw-bold">Warranty Duration</div>
+                                <div>{{ asset.warranty_duration or 'Not set' }} months</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <div class="mb-2 fw-bold">Expiry Date</div>
+                                <div>{{ asset.warranty_expiry_date.strftime('%Y-%m-%d') }}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2 fw-bold">Alert Period</div>
+                                <div>{{ asset.alert_period or 30 }} days before expiry</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- No warranty expiry date available -->
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warranty Information Incomplete</strong><br>
+                    The warranty expiry date could not be calculated. This may be due to missing purchase date or warranty duration information.
+                    {% if current_user.has_permission('EDIT', asset) %}
+                    <br><a href="{{ url_for('asset.edit_asset', asset_id=asset.id) }}" class="alert-link">Edit this asset</a> to complete the warranty information.
+                    {% endif %}
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <div class="mb-2 fw-bold">Purchase Date</div>
+                        <div>{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else 'Not set' }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2 fw-bold">Warranty Duration</div>
+                        <div>{{ asset.warranty_duration or 'Not set' }} months</div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="mb-2 fw-bold">Expiry Date</div>
+                        <div class="text-muted">Not calculated</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2 fw-bold">Alert Period</div>
+                        <div>{{ asset.alert_period or 30 }} days before expiry</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Asset Details Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Asset Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Product Name</div>
+                            <div>{{ asset.product_name }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Product Model</div>
+                            <div>{{ asset.product_model or 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Internal Asset Name</div>
+                            <div>{{ asset.internal_asset_name or 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Serial Number</div>
+                            <div>{{ asset.serial_number or 'N/A' }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Price</div>
+                            <div>{{ asset.currency_symbol or '$' }}{{ "%.2f"|format(asset.price or 0) }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Location</div>
+                            <div>{{ asset.location or 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Vendor</div>
+                            <div>{{ asset.vendor_company or 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="mb-2 fw-bold">Vendor Email</div>
+                            <div>
+                                {% if asset.vendor_email %}
+                                <a href="mailto:{{ asset.vendor_email }}">{{ asset.vendor_email }}</a>
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if asset.notes %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="mb-2 fw-bold">Notes</div>
+                        <div class="p-3 bg-light rounded">{{ asset.notes|nl2br }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if asset.tags %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="mb-2 fw-bold">Tags</div>
+                        <div>
+                            {% for tag in asset.tags %}
+                            <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if asset.disposal_date %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="mb-2 fw-bold">Disposal Date</div>
+                        <div>{{ asset.disposal_date.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Files Card -->
+        {% if asset.files %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Documents</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for file in asset.files %}
+                    <div class="col-md-6 mb-3">
+                        <div class="attachment-item">
+                            {% if file.file_type == 'application/pdf' %}
+                                <i class="fas fa-file-pdf text-danger attachment-icon"></i>
+                            {% elif file.file_type == 'application/msword' or file.file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' %}
+                                <i class="fas fa-file-word text-primary attachment-icon"></i>
+                            {% elif file.file_type == 'application/vnd.ms-excel' or file.file_type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' %}
+                                <i class="fas fa-file-excel text-success attachment-icon"></i>
+                            {% elif file.file_type == 'image/jpeg' or file.file_type == 'image/png' or file.file_type == 'image/gif' %}
+                                <i class="fas fa-file-image text-warning attachment-icon"></i>
+                            {% elif file.file_type == 'application/zip' or file.file_type == 'application/x-rar-compressed' %}
+                                <i class="fas fa-file-archive text-secondary attachment-icon"></i>
+                            {% else %}
+                                <i class="fas fa-file text-secondary attachment-icon"></i>
+                            {% endif %}
+                            
+                            <div class="flex-grow-1">
+                                <div>{{ file.filename }}</div>
+                                <small class="text-muted">{{ (file.file_size or 0) // 1024 }} KB • {{ file.uploaded_at.strftime('%Y-%m-%d') if file.uploaded_at else 'N/A' }}</small>
+                            </div>
+                            
+                            <div class="ms-2">
+                                <a href="{{ url_for('static', filename='uploads/' + file.file_path.split('/')[-1]) }}" class="btn btn-sm btn-outline-primary" download="{{ file.filename }}">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                
+                                {% if current_user.has_permission('EDIT', asset) %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteFileModal{{ file.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                
+                                <!-- Delete File Modal -->
+                                <div class="modal fade" id="deleteFileModal{{ file.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete the file <strong>{{ file.filename }}</strong>?
+                                                This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('asset.delete_file', asset_id=asset.id, file_id=file.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+<!-- Sidebar Column -->
+    <div class="col-md-4">
+        <!-- Assignment Info Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Assignment</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Assigned User</div>
+                    <div>
+                        {% if asset.assigned_user %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <div class="avatar-circle bg-primary text-white" style="width: 32px; height: 32px;">
+                                    <span class="initials" style="font-size: 14px;">{{ asset.assigned_user.username[0].upper() }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                {{ asset.assigned_user.full_name }}
+                                <div class="text-muted small">{{ asset.assigned_user.email }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">No user assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Assigned Groups</div>
+                    <div>
+                        {% for group in asset.assigned_groups %}
+                        <span class="badge bg-secondary me-1">{{ group.name }}</span>
+                        {% else %}
+                        <span class="text-muted">No groups assigned</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="mb-2 fw-bold">Notification Email</div>
+                    <div>
+                        {% if asset.user_email %}
+                        <a href="mailto:{{ asset.user_email }}">{{ asset.user_email }}</a>
+                        {% else %}
+                        <span class="text-muted">No notification email set</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Links Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Links</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if asset.assigned_user %}
+                    <a href="{{ url_for('admin.edit_user', user_id=asset.assigned_user.id) }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i> View Assigned User
+                    </a>
+                    {% endif %}
+                    
+                    {% if asset.vendor_company %}
+                    <a href="{{ url_for('asset.asset_list', vendor=asset.vendor_company) }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> View All Assets from {{ asset.vendor_company }}
+                    </a>
+                    {% endif %}
+                    
+                    {% for tag in asset.tags %}
+                    <a href="{{ url_for('asset.asset_list', tag=tag.id) }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tag me-2"></i> View All "{{ tag.name }}" Assets
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                {% if current_user.has_permission('EDIT', asset) %}
+                <form method="post" action="{{ url_for('notification.toggle_notifications', asset_id=asset.id) }}">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="notifications_enabled" name="notifications_enabled" 
+                              {% if asset.notifications_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="notifications_enabled">Enable Notifications</label>
+                    </div>
+                    <div class="form-text mb-3">
+                        {% if asset.notifications_enabled %}
+                        Notifications are currently enabled for this asset.
+                        {% else %}
+                        Notifications are currently disabled for this asset.
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        Save Setting
+                    </button>
+                </form>
+                {% else %}
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="notifications_readonly" 
+                          {% if asset.notifications_enabled %}checked{% endif %} disabled>
+                    <label class="form-check-label" for="notifications_readonly">Notifications</label>
+                </div>
+                <div class="form-text">
+                    {% if asset.notifications_enabled %}
+                    Notifications are enabled for this asset.
+                    {% else %}
+                    Notifications are disabled for this asset.
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="small text-muted mt-3">
+                    <strong>Notification Schedule:</strong>
+                    <ul class="mt-2">
+                        <li>Initial notification at 30 days before expiry</li>
+                        <li>Secondary notifications start at 15 days before expiry</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
