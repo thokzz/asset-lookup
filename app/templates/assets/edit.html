@@ -169,7 +169,7 @@
                                 <select class="form-control select2-users" id="notification_users" name="notification_users" multiple>
                                     {% for user in users %}
                                     <option value="{{ user.email }}" data-user-id="{{ user.id }}" 
-                                        {% if asset.notification_emails and user.email in asset.notification_emails %}selected{% endif %}>
+                                        {% if asset.notification_emails and user.email in asset.get_notification_emails_list() %}selected{% endif %}>
                                         {{ user.full_name }} ({{ user.email }})
                                     </option>
                                     {% endfor %}
@@ -185,7 +185,7 @@
                             <div class="mb-3">
                                 <label for="user_email" class="form-label">Additional Email Addresses</label>
                                 <input type="text" class="form-control" id="user_email" name="user_email" 
-                                       value="{{ asset.additional_emails or '' }}" 
+                                       value="{% if asset.notification_emails %}{{ asset.notification_emails }}{% endif %}" 
                                        placeholder="Additional emails (comma-separated)">
                                 <small class="form-text text-muted">Optional: Add external email addresses not in the user list (comma-separated)</small>
                             </div>
@@ -201,6 +201,8 @@
                         </small>
                     </div>
                     
+                    <!-- Replace the file deletion modal section in edit.html with this fixed version: -->
+
                     {% if asset.files %}
                     <div class="mb-3">
                         <label class="form-label">Current Files</label>
@@ -240,27 +242,34 @@
                                                         data-bs-toggle="modal" data-bs-target="#deleteFileModal{{ file.id }}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                                
-                                                <!-- Delete File Modal -->
-                                                <div class="modal fade" id="deleteFileModal{{ file.id }}" tabindex="-1">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Confirm Deletion</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                Are you sure you want to delete the file <strong>{{ file.filename }}</strong>?
-                                                                This action cannot be undone.
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                <form action="{{ url_for('asset.delete_file', asset_id=asset.id, file_id=file.id) }}" method="post">
-                                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Delete File Modal - FIXED VERSION -->
+                                    <div class="modal fade" id="deleteFileModal{{ file.id }}" tabindex="-1" aria-labelledby="deleteFileModalLabel{{ file.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteFileModalLabel{{ file.id }}">Confirm File Deletion</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        <strong>Warning:</strong> This action cannot be undone.
                                                     </div>
+                                                    <p>Are you sure you want to delete the file <strong>"{{ file.filename }}"</strong>?</p>
+                                                    <p class="text-muted small">The file will be permanently removed from the server.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <!-- FIXED: Use separate route for file deletion from edit page -->
+                                                    <form action="{{ url_for('asset.delete_file_from_edit', asset_id=asset.id, file_id=file.id) }}" method="post" style="display: inline;">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="fas fa-trash me-1"></i> Delete File
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -362,4 +371,137 @@ document.addEventListener('DOMContentLoaded', function() {
     currencySelect.addEventListener('change', toggleCustomCurrency);
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug form submission
+    const editForm = document.querySelector('form[action*="edit"]');
+    
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            console.log('Form submission started');
+            
+            // Check for file inputs
+            const fileInput = document.getElementById('files');
+            if (fileInput && fileInput.files.length > 0) {
+                console.log('Files selected:', fileInput.files.length);
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    console.log(`File ${i + 1}:`, fileInput.files[i].name, fileInput.files[i].size, 'bytes');
+                }
+            }
+            
+            // Validate required fields
+            const productName = document.getElementById('product_name');
+            const purchaseDate = document.getElementById('purchase_date');
+            const warrantyDuration = document.getElementById('warranty_duration');
+            
+            if (!productName.value.trim()) {
+                alert('Product name is required');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (!purchaseDate.value) {
+                alert('Purchase date is required');
+                e.preventDefault();
+                return false;
+            }
+            
+            if (!warrantyDuration.value || parseInt(warrantyDuration.value) <= 0) {
+                alert('Valid warranty duration is required');
+                e.preventDefault();
+                return false;
+            }
+            
+            console.log('Form validation passed, submitting...');
+            
+            // Disable submit button to prevent double submission
+            const submitBtn = editForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+            }
+        });
+    }
+    
+    // Debug file deletion modals
+    const deleteButtons = document.querySelectorAll('button[data-bs-toggle="modal"][data-bs-target*="deleteFileModal"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('Delete button clicked for modal:', this.getAttribute('data-bs-target'));
+        });
+    });
+    
+    // Debug file deletion forms
+    const deleteFileForms = document.querySelectorAll('form[action*="delete"]');
+    deleteFileForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            console.log('File deletion form submitted:', this.action);
+        });
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dropdownParent: $('body')
+    });
+    
+   $('.select2-tags').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        tags: true,
+        tokenSeparators: [',', ' '],
+        dropdownParent: $('body')
+    });
+    
+    // Initialize Select2 for notification users
+    $('.select2-users').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Select users to notify about warranty expiration',
+        allowClear: true,
+        dropdownParent: $('body')
+    });
+    
+    // Initialize Flatpickr (date picker)
+    flatpickr(".date-picker", {
+        dateFormat: "Y-m-d",
+        allowInput: true
+    });
+    
+    // Auto-select assigned user in notification recipients when assigned user changes
+    $('#assigned_user_id').on('change', function() {
+        const selectedUserId = $(this).val();
+        if (selectedUserId) {
+            // Find the corresponding user in notification users
+            const userEmail = $(`#notification_users option[data-user-id="${selectedUserId}"]`).val();
+            if (userEmail) {
+                // Get current selections
+                let currentSelections = $('#notification_users').val() || [];
+                // Add the assigned user's email if not already selected
+                if (!currentSelections.includes(userEmail)) {
+                    currentSelections.push(userEmail);
+                    $('#notification_users').val(currentSelections).trigger('change');
+                }
+            }
+        }
+    });
+    
+    // Handle manual email input combination with selected users
+    $('#user_email').on('blur', function() {
+        const manualEmails = this.value.split(',').map(email => email.trim()).filter(email => email);
+        const selectedEmails = $('#notification_users').val() || [];
+        
+        // Combine and deduplicate
+        const allEmails = [...new Set([...selectedEmails, ...manualEmails])];
+        
+        // Update the manual input with clean, deduplicated list
+        this.value = allEmails.join(', ');
+    });
+});</script>
+
 {% endblock %}

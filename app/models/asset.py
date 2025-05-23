@@ -34,6 +34,7 @@ class Asset(db.Model):
     created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
     notifications_enabled = db.Column(db.Boolean, default=True)
+    notification_emails = db.Column(db.Text)
     
     # Add an actual column for warranty_expiry_date
     warranty_expiry_date = db.Column(db.Date)
@@ -63,6 +64,21 @@ class Asset(db.Model):
             self.warranty_expiry_date = self.purchase_date + relativedelta(months=self.warranty_duration)
         else:
             self.warranty_expiry_date = None
+    
+    def get_notification_emails_list(self):
+        """Get notification emails as a list"""
+        if not self.notification_emails:
+            return []
+        return [email.strip() for email in self.notification_emails.split(',') if email.strip()]
+    
+    def set_notification_emails_list(self, email_list):
+        """Set notification emails from a list"""
+        if email_list:
+            # Remove duplicates and empty strings
+            clean_emails = list(set([email.strip() for email in email_list if email.strip()]))
+            self.notification_emails = ','.join(clean_emails)
+        else:
+            self.notification_emails = None
     
     @property
     def is_expired(self):
@@ -103,6 +119,7 @@ class Asset(db.Model):
             return 'Expiring Soon'
         # Otherwise, it's active
         return 'Active'
+
 
 class AssetFile(db.Model):
     __tablename__ = 'asset_files'

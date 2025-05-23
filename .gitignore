@@ -21,7 +21,7 @@ wheels/
 *.egg
 
 # Flask
-instance/
+
 .webassets-cache
 
 # Environment variables
@@ -46,6 +46,7 @@ logs/*.log
 # Uploads (keep directory structure but not files)
 uploads/*
 !uploads/.gitkeep
+instance/*
 !instance/.gitkeep
 
 # IDE
@@ -64,8 +65,4 @@ uploads/*
 ehthumbs.db
 Thumbs.db
 
-# Application specific
-instance/*.db
-instance/settings.json
-ssl/
-backups/
+

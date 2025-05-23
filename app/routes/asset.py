@@ -415,126 +415,217 @@ def edit_asset(asset_id):
         return redirect(url_for('asset.asset_detail', asset_id=asset.id))
     
     if request.method == 'POST':
-        # Collect old data for audit
-        old_data = {
-            'product_name': asset.product_name,
-            'product_model': asset.product_model,
-            'internal_asset_name': asset.internal_asset_name,
-            'serial_number': asset.serial_number,
-            'purchase_date': asset.purchase_date.isoformat() if asset.purchase_date else None,
-            'price': asset.price,
-            'currency_symbol': asset.currency_symbol,
-            'warranty_duration': asset.warranty_duration,
-            'location': asset.location,
-            'vendor_company': asset.vendor_company,
-            'vendor_email': asset.vendor_email,
-            'notes': asset.notes,
-            'disposal_date': asset.disposal_date.isoformat() if asset.disposal_date else None,
-            'assigned_user_id': asset.assigned_user_id,
-            'user_email': asset.user_email,
-            'alert_period': asset.alert_period,
-            'tags': [tag.id for tag in asset.tags],
-            'assigned_groups': [group.id for group in asset.assigned_groups]
-        }
-        
-        # Update asset data
-        asset.product_name = request.form.get('product_name')
-        asset.product_model = request.form.get('product_model')
-        asset.internal_asset_name = request.form.get('internal_asset_name')
-        asset.serial_number = request.form.get('serial_number')
-        asset.purchase_date = datetime.strptime(request.form.get('purchase_date'), '%Y-%m-%d').date()
-        asset.price = float(request.form.get('price') or 0)
-        currency_symbol = request.form.get('currency_symbol')
-        if currency_symbol == 'custom':
-            currency_symbol = request.form.get('custom_currency')
-        asset.currency_symbol = currency_symbol
-        asset.warranty_duration = int(request.form.get('warranty_duration') or 0)
-        asset.location = request.form.get('location')
-        asset.vendor_company = request.form.get('vendor_company')
-        asset.vendor_email = request.form.get('vendor_email')
-        asset.notes = request.form.get('notes')
-        
-        if request.form.get('disposal_date'):
-            asset.disposal_date = datetime.strptime(request.form.get('disposal_date'), '%Y-%m-%d').date()
-        else:
-            asset.disposal_date = None
+        try:
+            # Collect old data for audit
+            old_data = {
+                'product_name': asset.product_name,
+                'product_model': asset.product_model,
+                'internal_asset_name': asset.internal_asset_name,
+                'serial_number': asset.serial_number,
+                'purchase_date': asset.purchase_date.isoformat() if asset.purchase_date else None,
+                'price': asset.price,
+                'currency_symbol': asset.currency_symbol,
+                'warranty_duration': asset.warranty_duration,
+                'location': asset.location,
+                'vendor_company': asset.vendor_company,
+                'vendor_email': asset.vendor_email,
+                'notes': asset.notes,
+                'disposal_date': asset.disposal_date.isoformat() if asset.disposal_date else None,
+                'assigned_user_id': asset.assigned_user_id,
+                'user_email': asset.user_email,
+                'alert_period': asset.alert_period,
+                'tags': [tag.id for tag in asset.tags],
+                'assigned_groups': [group.id for group in asset.assigned_groups],
+                'notification_emails': asset.notification_emails  # Add this line
+            }
             
-        assigned_user_id = request.form.get('assigned_user_id')
-        if assigned_user_id == '':  # Handle empty string
-            assigned_user_id = None
-        asset.assigned_user_id = assigned_user_id
-        asset.user_email = request.form.get('user_email')
-        asset.alert_period = int(request.form.get('alert_period') or 30)
-        
-        # Update warranty_expiry_date
-        asset.update_warranty_expiry_date()
-        
-        # Handle tags
-        tag_ids = request.form.getlist('tags')
-        tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
-        asset.tags = tags
-        
-        # Handle groups
-        group_ids = request.form.getlist('groups')
-        groups = Group.query.filter(Group.id.in_(group_ids)).all() if group_ids else []
-        asset.assigned_groups = groups
-        
-        # Collect new data for audit
-        new_data = {
-            'product_name': asset.product_name,
-            'product_model': asset.product_model,
-            'internal_asset_name': asset.internal_asset_name,
-            'serial_number': asset.serial_number,
-            'purchase_date': asset.purchase_date.isoformat() if asset.purchase_date else None,
-            'price': asset.price,
-            'currency_symbol': asset.currency_symbol,
-            'warranty_duration': asset.warranty_duration,
-            'location': asset.location,
-            'vendor_company': asset.vendor_company,
-            'vendor_email': asset.vendor_email,
-            'notes': asset.notes,
-            'disposal_date': asset.disposal_date.isoformat() if asset.disposal_date else None,
-            'assigned_user_id': asset.assigned_user_id,
-            'user_email': asset.user_email,
-            'alert_period': asset.alert_period,
-            'tags': [tag.id for tag in asset.tags],
-            'assigned_groups': [group.id for group in asset.assigned_groups]
-        }
-        
-        # Log asset update
-        log_asset_change(
-            asset, 
-            "UPDATE",
-            old_data,
-            new_data,
-            description=f"Updated asset: {asset.product_name}"
-        )
-        
-        # Handle file uploads
-        if 'files' in request.files:
-            files = request.files.getlist('files')
-            for file in files:
-                if file and file.filename and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    # Add unique identifier to prevent filename collisions
-                    unique_filename = f"{uuid.uuid4().hex}_{filename}"
-                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                    file.save(os.path.join(current_app.root_path, file_path))
-                    
-                    # Create file record
-                    asset_file = AssetFile(
-                        asset_id=asset.id,
-                        filename=filename,
-                        file_path=file_path,
-                        file_type=file.content_type,
-                        file_size=len(file.read())
-                    )
-                    file.seek(0)  # Reset file pointer after reading
-                    db.session.add(asset_file)
-        
-        db.session.commit()
-        flash('Asset updated successfully!', 'success')
-        return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+            # Update asset data
+            asset.product_name = request.form.get('product_name', '').strip()
+            asset.product_model = request.form.get('product_model', '').strip() or None
+            asset.internal_asset_name = request.form.get('internal_asset_name', '').strip() or None
+            asset.serial_number = request.form.get('serial_number', '').strip() or None
+            
+            # Handle purchase date
+            purchase_date_str = request.form.get('purchase_date')
+            if purchase_date_str:
+                asset.purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+            
+            # Handle price
+            price_str = request.form.get('price', '0')
+            try:
+                asset.price = float(price_str) if price_str else 0
+            except ValueError:
+                asset.price = 0
+            
+            # Handle currency
+            currency_symbol = request.form.get('currency_symbol')
+            if currency_symbol == 'custom':
+                custom_currency = request.form.get('custom_currency', '').strip()
+                asset.currency_symbol = custom_currency if custom_currency else '$'
+            else:
+                asset.currency_symbol = currency_symbol or '$'
+            
+            # Handle warranty duration
+            warranty_duration_str = request.form.get('warranty_duration', '0')
+            try:
+                asset.warranty_duration = int(warranty_duration_str) if warranty_duration_str else 0
+            except ValueError:
+                asset.warranty_duration = 0
+            
+            asset.location = request.form.get('location', '').strip() or None
+            asset.vendor_company = request.form.get('vendor_company', '').strip() or None
+            asset.vendor_email = request.form.get('vendor_email', '').strip() or None
+            asset.notes = request.form.get('notes', '').strip() or None
+            
+            # Handle disposal date
+            disposal_date_str = request.form.get('disposal_date')
+            if disposal_date_str:
+                asset.disposal_date = datetime.strptime(disposal_date_str, '%Y-%m-%d').date()
+            else:
+                asset.disposal_date = None
+                
+            # Handle assigned user
+            assigned_user_id = request.form.get('assigned_user_id')
+            asset.assigned_user_id = assigned_user_id if assigned_user_id else None
+            
+            # Handle user email (legacy field)
+            asset.user_email = request.form.get('user_email', '').strip() or None
+            
+            # NEW: Handle notification recipients
+            notification_users = request.form.getlist('notification_users')
+            additional_emails = request.form.get('user_email', '').strip()
+            
+            # Combine selected users and additional emails
+            all_emails = []
+            
+            # Add selected user emails
+            if notification_users:
+                all_emails.extend(notification_users)
+            
+            # Add additional emails (comma-separated)
+            if additional_emails:
+                additional_email_list = [email.strip() for email in additional_emails.split(',') if email.strip()]
+                all_emails.extend(additional_email_list)
+            
+            # Set notification emails
+            asset.set_notification_emails_list(all_emails)
+            
+            # Handle alert period
+            alert_period_str = request.form.get('alert_period', '30')
+            try:
+                asset.alert_period = int(alert_period_str) if alert_period_str else 30
+            except ValueError:
+                asset.alert_period = 30
+            
+            # Update warranty_expiry_date
+            asset.update_warranty_expiry_date()
+            
+            # Handle tags
+            tag_ids = request.form.getlist('tags')
+            tags = Tag.query.filter(Tag.id.in_(tag_ids)).all() if tag_ids else []
+            asset.tags = tags
+            
+            # Handle groups
+            group_ids = request.form.getlist('groups')
+            groups = Group.query.filter(Group.id.in_(group_ids)).all() if group_ids else []
+            asset.assigned_groups = groups
+            
+            # Collect new data for audit
+            new_data = {
+                'product_name': asset.product_name,
+                'product_model': asset.product_model,
+                'internal_asset_name': asset.internal_asset_name,
+                'serial_number': asset.serial_number,
+                'purchase_date': asset.purchase_date.isoformat() if asset.purchase_date else None,
+                'price': asset.price,
+                'currency_symbol': asset.currency_symbol,
+                'warranty_duration': asset.warranty_duration,
+                'location': asset.location,
+                'vendor_company': asset.vendor_company,
+                'vendor_email': asset.vendor_email,
+                'notes': asset.notes,
+                'disposal_date': asset.disposal_date.isoformat() if asset.disposal_date else None,
+                'assigned_user_id': asset.assigned_user_id,
+                'user_email': asset.user_email,
+                'alert_period': asset.alert_period,
+                'tags': [tag.id for tag in asset.tags],
+                'assigned_groups': [group.id for group in asset.assigned_groups],
+                'notification_emails': asset.notification_emails  # Add this line
+            }
+            
+            # COMMIT BASIC ASSET CHANGES FIRST
+            db.session.commit()
+            
+            # Now handle file uploads SEPARATELY
+            files_uploaded = 0
+            if 'files' in request.files:
+                files = request.files.getlist('files')
+                for file in files:
+                    if file and file.filename and allowed_file(file.filename):
+                        try:
+                            filename = secure_filename(file.filename)
+                            # Add unique identifier to prevent filename collisions
+                            unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+                            full_file_path = os.path.join(current_app.root_path, file_path)
+                            
+                            # Ensure upload directory exists
+                            os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
+                            
+                            # Save the file
+                            file.save(full_file_path)
+                            
+                            # Get file size after saving
+                            file_size = os.path.getsize(full_file_path)
+                            
+                            # Create file record
+                            asset_file = AssetFile(
+                                asset_id=asset.id,
+                                filename=filename,
+                                file_path=file_path,
+                                file_type=file.content_type,
+                                file_size=file_size
+                            )
+                            db.session.add(asset_file)
+                            files_uploaded += 1
+                            
+                            # Log file upload
+                            log_activity(
+                                action="UPLOAD",
+                                resource_type="File",
+                                resource_id=asset_file.id,
+                                description=f"Uploaded file {file.filename} for asset {asset.product_name}"
+                            )
+                            
+                        except Exception as file_error:
+                            current_app.logger.error(f"Error uploading file {file.filename}: {str(file_error)}")
+                            # Continue with other files even if one fails
+                            continue
+            
+            # Commit file changes
+            db.session.commit()
+            
+            # Log asset update
+            log_asset_change(
+                asset, 
+                "UPDATE",
+                old_data,
+                new_data,
+                description=f"Updated asset: {asset.product_name}" + 
+                           (f" (uploaded {files_uploaded} files)" if files_uploaded > 0 else "")
+            )
+            
+            flash('Asset updated successfully!' + 
+                  (f' {files_uploaded} file(s) uploaded.' if files_uploaded > 0 else ''), 'success')
+            return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating asset: {str(e)}")
+            import traceback
+            current_app.logger.error(traceback.format_exc())
+            flash(f'Error updating asset: {str(e)}', 'danger')
+            return redirect(url_for('asset.edit_asset', asset_id=asset.id))
     
     # GET request - show form
     users = User.query.filter_by(is_active=True).order_by(User.username).all()
@@ -779,33 +870,122 @@ def delete_tag(tag_id):
 @asset.route('/assets/<asset_id>/files/<file_id>/delete', methods=['POST'])
 @login_required
 def delete_file(asset_id, file_id):
-    # Check if user can access this asset
-    accessible_assets = current_user.get_accessible_assets()
-    asset = accessible_assets.filter(Asset.id == asset_id).first_or_404()
-    
-    file = AssetFile.query.get_or_404(file_id)
-    
-    # Check if file belongs to the asset
-    if file.asset_id != asset.id:
-        flash('File not found.', 'danger')
-        return redirect(url_for('asset.asset_detail', asset_id=asset.id))
-    
-    # Check if user has EDIT permission
-    if not current_user.has_permission('EDIT', asset):
-        flash('You do not have permission to delete files from this asset.', 'danger')
-        return redirect(url_for('asset.asset_detail', asset_id=asset.id))
-    
-    # Delete file from storage
     try:
-        os.remove(os.path.join(current_app.root_path, file.file_path))
+        # Check if user can access this asset
+        accessible_assets = current_user.get_accessible_assets()
+        asset = accessible_assets.filter(Asset.id == asset_id).first_or_404()
+        
+        file = AssetFile.query.get_or_404(file_id)
+        
+        # Check if file belongs to the asset
+        if file.asset_id != asset.id:
+            flash('File not found.', 'danger')
+            return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+        
+        # Check if user has EDIT permission
+        if not current_user.has_permission('EDIT', asset):
+            flash('You do not have permission to delete files from this asset.', 'danger')
+            return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+        
+        # Store file info for logging before deletion
+        filename = file.filename
+        file_path = file.file_path
+        
+        # Delete file from storage
+        try:
+            full_file_path = os.path.join(current_app.root_path, file_path)
+            if os.path.exists(full_file_path):
+                os.remove(full_file_path)
+                current_app.logger.info(f"Successfully deleted file from storage: {full_file_path}")
+            else:
+                current_app.logger.warning(f"File not found in storage: {full_file_path}")
+        except Exception as e:
+            current_app.logger.error(f"Error deleting file from storage {full_file_path}: {str(e)}")
+            # Continue with database deletion even if file removal fails
+        
+        # Delete file record from database
+        db.session.delete(file)
+        db.session.commit()
+        
+        # Log the file deletion
+        log_activity(
+            action="DELETE",
+            resource_type="File",
+            resource_id=file_id,
+            description=f"Deleted file {filename} from asset {asset.product_name}"
+        )
+        
+        flash(f'File "{filename}" deleted successfully!', 'success')
+        
     except Exception as e:
-        current_app.logger.error(f"Error deleting file {file.file_path}: {str(e)}")
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting file: {str(e)}")
+        import traceback
+        current_app.logger.error(traceback.format_exc())
+        flash('Error deleting file. Please try again.', 'danger')
     
-    db.session.delete(file)
-    db.session.commit()
-    
-    flash('File deleted successfully!', 'success')
     return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+
+@asset.route('/assets/<asset_id>/edit/files/<file_id>/delete', methods=['POST'])
+@login_required
+def delete_file_from_edit(asset_id, file_id):
+    """Delete file from edit page and redirect back to edit"""
+    try:
+        # Check if user can access this asset
+        accessible_assets = current_user.get_accessible_assets()
+        asset = accessible_assets.filter(Asset.id == asset_id).first_or_404()
+        
+        file = AssetFile.query.get_or_404(file_id)
+        
+        # Check if file belongs to the asset
+        if file.asset_id != asset.id:
+            flash('File not found.', 'danger')
+            return redirect(url_for('asset.edit_asset', asset_id=asset.id))
+        
+        # Check if user has EDIT permission
+        if not current_user.has_permission('EDIT', asset):
+            flash('You do not have permission to delete files from this asset.', 'danger')
+            return redirect(url_for('asset.edit_asset', asset_id=asset.id))
+        
+        # Store file info for logging before deletion
+        filename = file.filename
+        file_path = file.file_path
+        
+        # Delete file from storage
+        try:
+            full_file_path = os.path.join(current_app.root_path, file_path)
+            if os.path.exists(full_file_path):
+                os.remove(full_file_path)
+                current_app.logger.info(f"Successfully deleted file from storage: {full_file_path}")
+            else:
+                current_app.logger.warning(f"File not found in storage: {full_file_path}")
+        except Exception as e:
+            current_app.logger.error(f"Error deleting file from storage {full_file_path}: {str(e)}")
+            # Continue with database deletion even if file removal fails
+        
+        # Delete file record from database
+        db.session.delete(file)
+        db.session.commit()
+        
+        # Log the file deletion
+        log_activity(
+            action="DELETE",
+            resource_type="File",
+            resource_id=file_id,
+            description=f"Deleted file {filename} from asset {asset.product_name} (from edit page)"
+        )
+        
+        flash(f'File "{filename}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting file from edit page: {str(e)}")
+        import traceback
+        current_app.logger.error(traceback.format_exc())
+        flash('Error deleting file. Please try again.', 'danger')
+    
+    # Redirect back to edit page
+    return redirect(url_for('asset.edit_asset', asset_id=asset.id))
 
 @asset.route('/export')
 @login_required
