@@ -36,6 +36,17 @@ body {
     }
 }
 
+/* Invalid Characters */
+.invalid-char {
+    background-color: #ffe6e6;
+    border-color: #dc3545;
+}
+.validation-message {
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+}
+
 /* Main content */
 main {
     margin-bottom: 60px;
