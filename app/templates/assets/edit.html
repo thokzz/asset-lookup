@@ -24,32 +24,63 @@
                     
                     <div class="mb-3">
                         <label for="product_name" class="form-label">Product Name *</label>
-                        <input type="text" class="form-control" id="product_name" name="product_name" 
-                               value="{{ asset.product_name }}" required>
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="product_name" 
+                               name="product_name" 
+                               value="{{ asset.product_name }}" 
+                               pattern="[A-Za-z0-9\s\-_.()]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed"
+                               required>
+                        <div class="validation-message" id="product_name_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="product_model" class="form-label">Product Model</label>
-                        <input type="text" class="form-control" id="product_model" name="product_model" 
-                               value="{{ asset.product_model }}">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="product_model" 
+                               name="product_model" 
+                               value="{{ asset.product_model }}"
+                               pattern="[A-Za-z0-9\s\-_.()]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed">
+                        <div class="validation-message" id="product_model_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="internal_asset_name" class="form-label">Internal Asset Name</label>
-                        <input type="text" class="form-control" id="internal_asset_name" name="internal_asset_name" 
-                               value="{{ asset.internal_asset_name }}">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="internal_asset_name" 
+                               name="internal_asset_name" 
+                               value="{{ asset.internal_asset_name }}"
+                               pattern="[A-Za-z0-9\s\-_.()]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed">
+                        <div class="validation-message" id="internal_asset_name_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="serial_number" class="form-label">Serial Number</label>
-                        <input type="text" class="form-control" id="serial_number" name="serial_number" 
-                               value="{{ asset.serial_number }}">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="serial_number" 
+                               name="serial_number" 
+                               value="{{ asset.serial_number }}"
+                               pattern="[A-Za-z0-9\-_.]+$"
+                               title="Only letters, numbers, hyphens, underscores, and periods are allowed">
+                        <div class="validation-message" id="serial_number_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="location" class="form-label">Location</label>
-                        <input type="text" class="form-control" id="location" name="location" 
-                               value="{{ asset.location }}">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="location" 
+                               name="location" 
+                               value="{{ asset.location }}"
+                               pattern="[A-Za-z0-9\s\-_.(),]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, commas, and parentheses are allowed">
+                        <div class="validation-message" id="location_error"></div>
                     </div>
                     
                     <div class="mb-3">
@@ -72,7 +103,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Right Column -->
                 <div class="col-md-6">
                     <h5 class="mb-3">Warranty Details</h5>
@@ -97,14 +128,26 @@
                     
                     <div class="mb-3">
                         <label for="vendor_company" class="form-label">Vendor Company</label>
-                        <input type="text" class="form-control" id="vendor_company" name="vendor_company" 
-                               value="{{ asset.vendor_company }}">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="vendor_company" 
+                               name="vendor_company" 
+                               value="{{ asset.vendor_company }}"
+                               pattern="[A-Za-z0-9\s\-_.()&,]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, parentheses, ampersands, and commas are allowed">
+                        <div class="validation-message" id="vendor_company_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="vendor_email" class="form-label">Vendor Email</label>
-                        <input type="email" class="form-control" id="vendor_email" name="vendor_email" 
-                               value="{{ asset.vendor_email }}">
+                        <input type="email" 
+                               class="form-control" 
+                               id="vendor_email" 
+                               name="vendor_email" 
+                               value="{{ asset.vendor_email }}"
+                               pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                               title="Please enter a valid email address">
+                        <div class="validation-message" id="vendor_email_error"></div>
                     </div>
                     
                     <div class="mb-3">
@@ -503,5 +546,177 @@ document.addEventListener('DOMContentLoaded', function() {
         this.value = allEmails.join(', ');
     });
 });</script>
+
+<script>
+// Input validation for restricted characters
+document.addEventListener('DOMContentLoaded', function() {
+    // Define the restricted characters
+    const restrictedChars = /[!';\#\$%\^\&\*\{\}\]\[<>\?\|]/g;
+    
+    // Get all restricted input fields
+    const restrictedInputs = document.querySelectorAll('.restricted-input');
+    
+    // Function to validate input in real-time
+    function validateInput(input) {
+        const value = input.value;
+        const fieldName = input.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const errorDiv = document.getElementById(input.id + '_error');
+        
+        if (restrictedChars.test(value)) {
+            input.classList.add('invalid-char', 'is-invalid');
+            input.classList.remove('is-valid');
+            errorDiv.textContent = `${fieldName}: Please remove these characters: ! ' ; # $ % ^ & * { } ] [ < > ? |`;
+            return false;
+        } else {
+            input.classList.remove('invalid-char', 'is-invalid');
+            if (value.trim()) {
+                input.classList.add('is-valid');
+            } else {
+                input.classList.remove('is-valid');
+            }
+            errorDiv.textContent = '';
+            return true;
+        }
+    }
+    
+    // Function to prevent typing restricted characters
+    function preventRestrictedChars(e) {
+        const char = String.fromCharCode(e.which);
+        if (restrictedChars.test(char)) {
+            e.preventDefault();
+            
+            // Show temporary warning
+            const input = e.target;
+            const errorDiv = document.getElementById(input.id + '_error');
+            const originalText = errorDiv.textContent;
+            
+            errorDiv.textContent = `Character "${char}" is not allowed in this field`;
+            errorDiv.style.color = '#dc3545';
+            
+            setTimeout(() => {
+                if (errorDiv.textContent === `Character "${char}" is not allowed in this field`) {
+                    errorDiv.textContent = originalText;
+                }
+            }, 2000);
+            
+            return false;
+        }
+    }
+    
+    // Function to clean pasted content
+    function cleanPastedContent(e) {
+        setTimeout(() => {
+            const input = e.target;
+            const originalValue = input.value;
+            const cleanedValue = originalValue.replace(restrictedChars, '');
+            
+            if (originalValue !== cleanedValue) {
+                input.value = cleanedValue;
+                const errorDiv = document.getElementById(input.id + '_error');
+                errorDiv.textContent = 'Invalid characters were automatically removed from pasted content';
+                errorDiv.style.color = '#856404';
+                
+                setTimeout(() => {
+                    if (errorDiv.textContent.includes('pasted content')) {
+                        errorDiv.textContent = '';
+                    }
+                }, 3000);
+            }
+            
+            validateInput(input);
+        }, 10);
+    }
+    
+    // Apply event listeners to all restricted inputs
+    restrictedInputs.forEach(input => {
+        // Prevent typing restricted characters
+        input.addEventListener('keypress', preventRestrictedChars);
+        
+        // Validate on input (handles paste, drag-drop, etc.)
+        input.addEventListener('input', function(e) {
+            validateInput(this);
+        });
+        
+        // Clean pasted content
+        input.addEventListener('paste', cleanPastedContent);
+        
+        // Validate on blur
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+        
+        // Initial validation for pre-filled values
+        if (input.value) {
+            validateInput(input);
+        }
+    });
+    
+    // Special handling for email field
+    const emailInput = document.getElementById('vendor_email');
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const errorDiv = document.getElementById('vendor_email_error');
+            
+            if (this.value && !emailPattern.test(this.value)) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                errorDiv.textContent = 'Please enter a valid email address (e.g., user@example.com)';
+            } else if (this.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+                errorDiv.textContent = '';
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+                errorDiv.textContent = '';
+            }
+        });
+        
+        // Initial email validation
+        if (emailInput.value) {
+            emailInput.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // Form submission validation (if form exists)
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            restrictedInputs.forEach(input => {
+                if (!validateInput(input)) {
+                    isValid = false;
+                }
+            });
+            
+            // Validate email separately
+            if (emailInput && emailInput.value) {
+                const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailPattern.test(emailInput.value)) {
+                    isValid = false;
+                    emailInput.classList.add('is-invalid');
+                    const errorDiv = document.getElementById('vendor_email_error');
+                    errorDiv.textContent = 'Please enter a valid email address';
+                }
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fix the validation errors before submitting the form.');
+                
+                // Scroll to first error
+                const firstError = document.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+                
+                return false;
+            }
+        });
+    });
+});
+</script>
 
 {% endblock %}

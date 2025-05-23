@@ -25,27 +25,58 @@
                     
                     <div class="mb-3">
                         <label for="product_name" class="form-label">Product Name *</label>
-                        <input type="text" class="form-control" id="product_name" name="product_name" required>
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="product_name" 
+                               name="product_name" 
+                               pattern="[A-Za-z0-9\s\-_.()]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed"
+                               required>
+                        <div class="validation-message" id="product_name_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="product_model" class="form-label">Product Model</label>
-                        <input type="text" class="form-control" id="product_model" name="product_model">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="product_model" 
+                               name="product_model"
+                               pattern="[A-Za-z0-9\s\-_.()]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed">
+                        <div class="validation-message" id="product_model_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="internal_asset_name" class="form-label">Internal Asset Name</label>
-                        <input type="text" class="form-control" id="internal_asset_name" name="internal_asset_name">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="internal_asset_name" 
+                               name="internal_asset_name"
+                               pattern="[A-Za-z0-9\s\-_.()]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, and parentheses are allowed">
+                        <div class="validation-message" id="internal_asset_name_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="serial_number" class="form-label">Serial Number</label>
-                        <input type="text" class="form-control" id="serial_number" name="serial_number">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="serial_number" 
+                               name="serial_number"
+                               pattern="[A-Za-z0-9\-_.]+$"
+                               title="Only letters, numbers, hyphens, underscores, and periods are allowed">
+                        <div class="validation-message" id="serial_number_error"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="location" class="form-label">Location</label>
-                        <input type="text" class="form-control" id="location" name="location">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="location" 
+                               name="location"
+                               pattern="[A-Za-z0-9\s\-_.(),]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, commas, and parentheses are allowed">
+                        <div class="validation-message" id="location_error"></div>
                     </div>
             
                     <div class="mb-3">
@@ -103,7 +134,13 @@
                     
                     <div class="mb-3">
                         <label for="vendor_company" class="form-label">Vendor Company</label>
-                        <input type="text" class="form-control" id="vendor_company" name="vendor_company">
+                        <input type="text" 
+                               class="form-control restricted-input" 
+                               id="vendor_company" 
+                               name="vendor_company"
+                               pattern="[A-Za-z0-9\s\-_.()&,]+$"
+                               title="Only letters, numbers, spaces, hyphens, underscores, periods, parentheses, ampersands, and commas are allowed">
+                        <div class="validation-message" id="vendor_company_error"></div>
                     </div>
                     
                     <div class="mb-3">
@@ -343,6 +380,122 @@
         // Initial calculation on page load
         calculateWarrantyExpiry();
     });
+</script>
+
+<script>
+// Input validation for restricted characters
+document.addEventListener('DOMContentLoaded', function() {
+    // Define the restricted characters
+    const restrictedChars = /[!';\#\$%\^\&\*\{\}\]\[<>\?\|]/g;
+    
+    // Get all restricted input fields
+    const restrictedInputs = document.querySelectorAll('.restricted-input');
+    
+    // Function to validate input in real-time
+    function validateInput(input) {
+        const value = input.value;
+        const fieldName = input.name.replace('_', ' ');
+        const errorDiv = document.getElementById(input.id + '_error');
+        
+        if (restrictedChars.test(value)) {
+            input.classList.add('invalid-char', 'is-invalid');
+            errorDiv.textContent = `Invalid characters detected. Please remove: ! ' ; # $ % ^ & * { } ] [ < > ? |`;
+            return false;
+        } else {
+            input.classList.remove('invalid-char', 'is-invalid');
+            if (value.trim()) {
+                input.classList.add('is-valid');
+            }
+            errorDiv.textContent = '';
+            return true;
+        }
+    }
+    
+    // Function to prevent typing restricted characters
+    function preventRestrictedChars(e) {
+        const char = String.fromCharCode(e.which);
+        if (restrictedChars.test(char)) {
+            e.preventDefault();
+            
+            // Show temporary warning
+            const input = e.target;
+            const errorDiv = document.getElementById(input.id + '_error');
+            const originalText = errorDiv.textContent;
+            
+            errorDiv.textContent = `Character "${char}" is not allowed`;
+            
+            setTimeout(() => {
+                if (errorDiv.textContent === `Character "${char}" is not allowed`) {
+                    errorDiv.textContent = originalText;
+                }
+            }, 2000);
+            
+            return false;
+        }
+    }
+    
+    // Function to clean pasted content
+    function cleanPastedContent(e) {
+        setTimeout(() => {
+            const input = e.target;
+            const originalValue = input.value;
+            const cleanedValue = originalValue.replace(restrictedChars, '');
+            
+            if (originalValue !== cleanedValue) {
+                input.value = cleanedValue;
+                const errorDiv = document.getElementById(input.id + '_error');
+                errorDiv.textContent = 'Some invalid characters were removed from pasted content';
+                
+                setTimeout(() => {
+                    if (errorDiv.textContent.includes('pasted content')) {
+                        errorDiv.textContent = '';
+                    }
+                }, 3000);
+            }
+            
+            validateInput(input);
+        }, 10);
+    }
+    
+    // Apply event listeners to all restricted inputs
+    restrictedInputs.forEach(input => {
+        // Prevent typing restricted characters
+        input.addEventListener('keypress', preventRestrictedChars);
+        
+        // Validate on input (handles paste, drag-drop, etc.)
+        input.addEventListener('input', function(e) {
+            validateInput(this);
+        });
+        
+        // Clean pasted content
+        input.addEventListener('paste', cleanPastedContent);
+        
+        // Validate on blur
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+    });
+    
+    // Update form submission validation
+    const form = document.getElementById('assetForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            restrictedInputs.forEach(input => {
+                if (!validateInput(input)) {
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fix the validation errors before submitting.');
+                return false;
+            }
+        });
+    }
+});
 </script>
 
 <script>
