@@ -46,6 +46,7 @@ logs/*.log
 # Uploads (keep directory structure but not files)
 uploads/*
 !uploads/.gitkeep
+!instance/.gitkeep
 
 # IDE
 .vscode/
