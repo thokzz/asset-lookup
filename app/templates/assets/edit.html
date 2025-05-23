@@ -5,7 +5,8 @@
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">{% endblock %}
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -16,7 +17,7 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="post" action="{{ url_for('asset.edit_asset', asset_id=asset.id) }}" enctype="multipart/form-data">
+        <form method="post" action="{{ url_for('asset.edit_asset', asset_id=asset.id) }}" enctype="multipart/form-data" id="editAssetForm">
             <div class="row">
                 <!-- Left Column -->
                 <div class="col-md-6">
@@ -144,9 +145,7 @@
                                class="form-control" 
                                id="vendor_email" 
                                name="vendor_email" 
-                               value="{{ asset.vendor_email }}"
-                               pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                               title="Please enter a valid email address">
+                               value="{{ asset.vendor_email }}">
                         <div class="validation-message" id="vendor_email_error"></div>
                     </div>
                     
@@ -244,8 +243,7 @@
                         </small>
                     </div>
                     
-                    <!-- Replace the file deletion modal section in edit.html with this fixed version: -->
-
+                    <!-- Current Files Section -->
                     {% if asset.files %}
                     <div class="mb-3">
                         <label class="form-label">Current Files</label>
@@ -281,39 +279,10 @@
                                                     <i class="fas fa-download"></i>
                                                 </a>
                                                 
-                                                <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                        data-bs-toggle="modal" data-bs-target="#deleteFileModal{{ file.id }}">
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-file-btn" 
+                                                        data-file-id="{{ file.id }}" data-file-name="{{ file.filename }}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Delete File Modal - FIXED VERSION -->
-                                    <div class="modal fade" id="deleteFileModal{{ file.id }}" tabindex="-1" aria-labelledby="deleteFileModalLabel{{ file.id }}" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteFileModalLabel{{ file.id }}">Confirm File Deletion</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="alert alert-warning">
-                                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                                        <strong>Warning:</strong> This action cannot be undone.
-                                                    </div>
-                                                    <p>Are you sure you want to delete the file <strong>"{{ file.filename }}"</strong>?</p>
-                                                    <p class="text-muted small">The file will be permanently removed from the server.</p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <!-- FIXED: Use separate route for file deletion from edit page -->
-                                                    <form action="{{ url_for('asset.delete_file_from_edit', asset_id=asset.id, file_id=file.id) }}" method="post" style="display: inline;">
-                                                        <button type="submit" class="btn btn-danger">
-                                                            <i class="fas fa-trash me-1"></i> Delete File
-                                                        </button>
-                                                    </form>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -330,11 +299,39 @@
                 <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i> Cancel
                 </a>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="saveBtn">
                     <i class="fas fa-save me-1"></i> Save Changes
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Single File Delete Modal -->
+<div class="modal fade" id="deleteFileModal" tabindex="-1" aria-labelledby="deleteFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteFileModalLabel">Confirm File Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                <p>Are you sure you want to delete the file <strong id="fileNameToDelete"></strong>?</p>
+                <p class="text-muted small">The file will be permanently removed from the server.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteFileForm" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Delete File
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -343,149 +340,9 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Select2
-        $('.select2').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('body')
-        });
-        
-       $('.select2-tags').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            tags: true,
-            tokenSeparators: [',', ' '],
-            dropdownParent: $('body')
-        });
-        
-        // Initialize Select2 for notification users
-        $('.select2-users').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'Select users to notify about warranty expiration',
-            allowClear: true,
-            dropdownParent: $('body')
-        });
-        
-        // Initialize Flatpickr (date picker)
-        flatpickr(".date-picker", {
-            dateFormat: "Y-m-d",
-            allowInput: true
-        });
-        
-        // Auto-select assigned user in notification recipients when assigned user changes
-        $('#assigned_user_id').on('change', function() {
-            const selectedUserId = $(this).val();
-            if (selectedUserId) {
-                // Find the corresponding user in notification users
-                const userEmail = $(`#notification_users option[data-user-id="${selectedUserId}"]`).val();
-                if (userEmail) {
-                    // Get current selections
-                    let currentSelections = $('#notification_users').val() || [];
-                    // Add the assigned user's email if not already selected
-                    if (!currentSelections.includes(userEmail)) {
-                        currentSelections.push(userEmail);
-                        $('#notification_users').val(currentSelections).trigger('change');
-                    }
-                }
-            }
-        });
-    });
-</script>
-
-<script>
 document.addEventListener('DOMContentLoaded', function() {
-    const currencySelect = document.getElementById('currency_symbol');
-    const customCurrency = document.querySelector('.custom-currency');
+    console.log('Edit form initialized');
     
-    function toggleCustomCurrency() {
-        if (currencySelect.value === 'custom') {
-            customCurrency.style.display = 'block';
-        } else {
-            customCurrency.style.display = 'none';
-        }
-    }
-    
-    // Initial state
-    toggleCustomCurrency();
-    
-    // On change
-    currencySelect.addEventListener('change', toggleCustomCurrency);
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Debug form submission
-    const editForm = document.querySelector('form[action*="edit"]');
-    
-    if (editForm) {
-        editForm.addEventListener('submit', function(e) {
-            console.log('Form submission started');
-            
-            // Check for file inputs
-            const fileInput = document.getElementById('files');
-            if (fileInput && fileInput.files.length > 0) {
-                console.log('Files selected:', fileInput.files.length);
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    console.log(`File ${i + 1}:`, fileInput.files[i].name, fileInput.files[i].size, 'bytes');
-                }
-            }
-            
-            // Validate required fields
-            const productName = document.getElementById('product_name');
-            const purchaseDate = document.getElementById('purchase_date');
-            const warrantyDuration = document.getElementById('warranty_duration');
-            
-            if (!productName.value.trim()) {
-                alert('Product name is required');
-                e.preventDefault();
-                return false;
-            }
-            
-            if (!purchaseDate.value) {
-                alert('Purchase date is required');
-                e.preventDefault();
-                return false;
-            }
-            
-            if (!warrantyDuration.value || parseInt(warrantyDuration.value) <= 0) {
-                alert('Valid warranty duration is required');
-                e.preventDefault();
-                return false;
-            }
-            
-            console.log('Form validation passed, submitting...');
-            
-            // Disable submit button to prevent double submission
-            const submitBtn = editForm.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
-            }
-        });
-    }
-    
-    // Debug file deletion modals
-    const deleteButtons = document.querySelectorAll('button[data-bs-toggle="modal"][data-bs-target*="deleteFileModal"]');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            console.log('Delete button clicked for modal:', this.getAttribute('data-bs-target'));
-        });
-    });
-    
-    // Debug file deletion forms
-    const deleteFileForms = document.querySelectorAll('form[action*="delete"]');
-    deleteFileForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            console.log('File deletion form submitted:', this.action);
-        });
-    });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
     // Initialize Select2
     $('.select2').select2({
         theme: 'bootstrap-5',
@@ -493,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dropdownParent: $('body')
     });
     
-   $('.select2-tags').select2({
+    $('.select2-tags').select2({
         theme: 'bootstrap-5',
         width: '100%',
         tags: true,
@@ -534,114 +391,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Handle manual email input combination with selected users
-    $('#user_email').on('blur', function() {
-        const manualEmails = this.value.split(',').map(email => email.trim()).filter(email => email);
-        const selectedEmails = $('#notification_users').val() || [];
-        
-        // Combine and deduplicate
-        const allEmails = [...new Set([...selectedEmails, ...manualEmails])];
-        
-        // Update the manual input with clean, deduplicated list
-        this.value = allEmails.join(', ');
-    });
-});</script>
-
-<script>
-// Input validation for restricted characters
-document.addEventListener('DOMContentLoaded', function() {
-    // Define the restricted characters
-    const restrictedChars = /[!';\#\$%\^\&\*\{\}\]\[<>\?\|]/g;
+    // Currency handling
+    const currencySelect = document.getElementById('currency_symbol');
+    const customCurrency = document.querySelector('.custom-currency');
     
-    // Get all restricted input fields
+    function toggleCustomCurrency() {
+        if (currencySelect.value === 'custom') {
+            customCurrency.style.display = 'block';
+        } else {
+            customCurrency.style.display = 'none';
+        }
+    }
+    
+    // Initial state
+    toggleCustomCurrency();
+    
+    // On change
+    currencySelect.addEventListener('change', toggleCustomCurrency);
+    
+    // Input validation for restricted characters
+    const restrictedChars = /[!';\#\$%\^\&\*\{\}\]\[<>\?\|]/g;
     const restrictedInputs = document.querySelectorAll('.restricted-input');
     
-    // Function to validate input in real-time
     function validateInput(input) {
         const value = input.value;
-        const fieldName = input.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
         const errorDiv = document.getElementById(input.id + '_error');
         
         if (restrictedChars.test(value)) {
-            input.classList.add('invalid-char', 'is-invalid');
+            input.classList.add('is-invalid');
             input.classList.remove('is-valid');
-            errorDiv.textContent = `${fieldName}: Please remove these characters: ! ' ; # $ % ^ & * { } ] [ < > ? |`;
+            if (errorDiv) {
+                errorDiv.textContent = 'Invalid characters detected. Please remove: ! \' ; # $ % ^ & * { } ] [ < > ? |';
+            }
             return false;
         } else {
-            input.classList.remove('invalid-char', 'is-invalid');
+            input.classList.remove('is-invalid');
             if (value.trim()) {
                 input.classList.add('is-valid');
             } else {
                 input.classList.remove('is-valid');
             }
-            errorDiv.textContent = '';
+            if (errorDiv) {
+                errorDiv.textContent = '';
+            }
             return true;
         }
     }
     
-    // Function to prevent typing restricted characters
-    function preventRestrictedChars(e) {
-        const char = String.fromCharCode(e.which);
-        if (restrictedChars.test(char)) {
-            e.preventDefault();
-            
-            // Show temporary warning
-            const input = e.target;
-            const errorDiv = document.getElementById(input.id + '_error');
-            const originalText = errorDiv.textContent;
-            
-            errorDiv.textContent = `Character "${char}" is not allowed in this field`;
-            errorDiv.style.color = '#dc3545';
-            
-            setTimeout(() => {
-                if (errorDiv.textContent === `Character "${char}" is not allowed in this field`) {
-                    errorDiv.textContent = originalText;
-                }
-            }, 2000);
-            
-            return false;
-        }
-    }
-    
-    // Function to clean pasted content
-    function cleanPastedContent(e) {
-        setTimeout(() => {
-            const input = e.target;
-            const originalValue = input.value;
-            const cleanedValue = originalValue.replace(restrictedChars, '');
-            
-            if (originalValue !== cleanedValue) {
-                input.value = cleanedValue;
-                const errorDiv = document.getElementById(input.id + '_error');
-                errorDiv.textContent = 'Invalid characters were automatically removed from pasted content';
-                errorDiv.style.color = '#856404';
-                
-                setTimeout(() => {
-                    if (errorDiv.textContent.includes('pasted content')) {
-                        errorDiv.textContent = '';
-                    }
-                }, 3000);
-            }
-            
-            validateInput(input);
-        }, 10);
-    }
-    
-    // Apply event listeners to all restricted inputs
+    // Apply validation to restricted inputs
     restrictedInputs.forEach(input => {
-        // Prevent typing restricted characters
-        input.addEventListener('keypress', preventRestrictedChars);
-        
-        // Validate on input (handles paste, drag-drop, etc.)
-        input.addEventListener('input', function(e) {
-            validateInput(this);
-        });
-        
-        // Clean pasted content
-        input.addEventListener('paste', cleanPastedContent);
-        
-        // Validate on blur
-        input.addEventListener('blur', function() {
+        input.addEventListener('input', function() {
             validateInput(this);
         });
         
@@ -651,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Special handling for email field
+    // Email validation
     const emailInput = document.getElementById('vendor_email');
     if (emailInput) {
         emailInput.addEventListener('input', function() {
@@ -661,14 +460,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value && !emailPattern.test(this.value)) {
                 this.classList.add('is-invalid');
                 this.classList.remove('is-valid');
-                errorDiv.textContent = 'Please enter a valid email address (e.g., user@example.com)';
+                if (errorDiv) {
+                    errorDiv.textContent = 'Please enter a valid email address';
+                }
             } else if (this.value) {
                 this.classList.add('is-valid');
                 this.classList.remove('is-invalid');
-                errorDiv.textContent = '';
+                if (errorDiv) {
+                    errorDiv.textContent = '';
+                }
             } else {
                 this.classList.remove('is-valid', 'is-invalid');
-                errorDiv.textContent = '';
+                if (errorDiv) {
+                    errorDiv.textContent = '';
+                }
             }
         });
         
@@ -678,45 +483,110 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Form submission validation (if form exists)
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            let isValid = true;
+    // File deletion handling
+    const deleteFileModal = new bootstrap.Modal(document.getElementById('deleteFileModal'));
+    const deleteFileForm = document.getElementById('deleteFileForm');
+    const fileNameSpan = document.getElementById('fileNameToDelete');
+    
+    // Handle delete file button clicks
+    document.querySelectorAll('.delete-file-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             
-            restrictedInputs.forEach(input => {
-                if (!validateInput(input)) {
-                    isValid = false;
-                }
-            });
+            const fileId = this.dataset.fileId;
+            const fileName = this.dataset.fileName;
             
-            // Validate email separately
-            if (emailInput && emailInput.value) {
-                const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                if (!emailPattern.test(emailInput.value)) {
-                    isValid = false;
-                    emailInput.classList.add('is-invalid');
-                    const errorDiv = document.getElementById('vendor_email_error');
+            // Update modal content
+            fileNameSpan.textContent = fileName;
+            deleteFileForm.action = `{{ url_for('asset.delete_file_from_edit', asset_id=asset.id, file_id='FILE_ID') }}`.replace('FILE_ID', fileId);
+            
+            // Show modal
+            deleteFileModal.show();
+        });
+    });
+    
+    // Form submission handling
+    const editForm = document.getElementById('editAssetForm');
+    const saveBtn = document.getElementById('saveBtn');
+    
+    editForm.addEventListener('submit', function(e) {
+        console.log('Form submission started');
+        
+        // Validate required fields
+        const productName = document.getElementById('product_name');
+        const purchaseDate = document.getElementById('purchase_date');
+        const warrantyDuration = document.getElementById('warranty_duration');
+        
+        if (!productName.value.trim()) {
+            e.preventDefault();
+            alert('Product name is required');
+            productName.focus();
+            return false;
+        }
+        
+        if (!purchaseDate.value) {
+            e.preventDefault();
+            alert('Purchase date is required');
+            purchaseDate.focus();
+            return false;
+        }
+        
+        if (!warrantyDuration.value || parseInt(warrantyDuration.value) <= 0) {
+            e.preventDefault();
+            alert('Valid warranty duration is required');
+            warrantyDuration.focus();
+            return false;
+        }
+        
+        // Validate restricted inputs
+        let hasValidationErrors = false;
+        restrictedInputs.forEach(input => {
+            if (!validateInput(input)) {
+                hasValidationErrors = true;
+            }
+        });
+        
+        // Validate email if provided
+        if (emailInput && emailInput.value) {
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(emailInput.value)) {
+                hasValidationErrors = true;
+                emailInput.classList.add('is-invalid');
+                const errorDiv = document.getElementById('vendor_email_error');
+                if (errorDiv) {
                     errorDiv.textContent = 'Please enter a valid email address';
                 }
             }
+        }
+        
+        if (hasValidationErrors) {
+            e.preventDefault();
+            alert('Please fix the validation errors before submitting the form.');
             
-            if (!isValid) {
-                e.preventDefault();
-                alert('Please fix the validation errors before submitting the form.');
-                
-                // Scroll to first error
-                const firstError = document.querySelector('.is-invalid');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstError.focus();
-                }
-                
-                return false;
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
             }
-        });
+            return false;
+        }
+        
+        console.log('Form validation passed, submitting...');
+        
+        // Disable submit button to prevent double submission
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+        
+        // Re-enable button after 5 seconds as failsafe
+        setTimeout(() => {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Changes';
+        }, 5000);
     });
+    
+    console.log('Edit form setup complete');
 });
 </script>
-
 {% endblock %}
