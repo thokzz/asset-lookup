@@ -1,6 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('asset.dashboard') }}">Asset Lookup</a>
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('asset.dashboard') }}">
+            <img src="{{ url_for('static', filename='image/AL_logo.png') }}" alt="Asset Lookup Logo" height="30" class="me-2">
+            Asset Lookup
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
