@@ -80,22 +80,20 @@
                     </div>
             
                     <div class="mb-3">
-                        <div class="mb-3">
-                            <label for="price" class="form-label">Price</label>
-                            <div class="input-group">
-                                <select class="form-select" style="max-width: 100px;" id="currency_symbol" name="currency_symbol">
-                                    <option value="$" selected>$ (USD)</option>
-                                    <option value="€">€ (EUR)</option>
-                                    <option value="£">£ (GBP)</option>
-                                    <option value="¥">¥ (JPY/CNY)</option>
-                                    <option value="₹">₹ (INR)</option>
-                                    <option value="₱">₱ (PHP)</option>
-                                    <option value="custom">Custom</option>
-                                </select>
-                                <input type="text" class="form-control custom-currency" id="custom_currency" name="custom_currency" 
-                                      placeholder="Custom symbol" style="max-width: 120px; display: none;">
-                                <input type="number" step="0.01" class="form-control" id="price" name="price">
-                            </div>
+                        <label for="price" class="form-label">Price</label>
+                        <div class="input-group">
+                            <select class="form-select" style="max-width: 100px;" id="currency_symbol" name="currency_symbol">
+                                <option value="$" selected>$ (USD)</option>
+                                <option value="€">€ (EUR)</option>
+                                <option value="£">£ (GBP)</option>
+                                <option value="¥">¥ (JPY/CNY)</option>
+                                <option value="₹">₹ (INR)</option>
+                                <option value="₱">₱ (PHP)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input type="text" class="form-control custom-currency" id="custom_currency" name="custom_currency" 
+                                  placeholder="Custom symbol" style="max-width: 120px; display: none;">
+                            <input type="number" step="0.01" class="form-control" id="price" name="price">
                         </div>
                     </div>
                 </div>
@@ -146,6 +144,7 @@
                     <div class="mb-3">
                         <label for="vendor_email" class="form-label">Vendor Email</label>
                         <input type="email" class="form-control" id="vendor_email" name="vendor_email">
+                        <div class="validation-message" id="vendor_email_error"></div>
                     </div>
                     
                     <div class="mb-3">
@@ -254,252 +253,50 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Select2
-        $('.select2').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('body')
-        });
-        
-       $('.select2-tags').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            tags: true,
-            tokenSeparators: [',', ' '],
-            dropdownParent: $('body')
-        });
-        
-        // Initialize Select2 for notification users
-        $('.select2-users').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'Select users to notify about warranty expiration',
-            allowClear: true,
-            dropdownParent: $('body')
-        });
-        
-        // Initialize Flatpickr (date picker)
-        flatpickr(".date-picker", {
-            dateFormat: "Y-m-d",
-            allowInput: true
-        });
-        
-        // Set today's date as default for purchase date
-        document.getElementById('purchase_date').value = new Date().toISOString().slice(0, 10);
-        
-        // Auto-select assigned user in notification recipients when assigned user changes
-        $('#assigned_user_id').on('change', function() {
-            const selectedUserId = $(this).val();
-            if (selectedUserId) {
-                // Find the corresponding user in notification users
-                const userEmail = $(`#notification_users option[data-user-id="${selectedUserId}"]`).val();
-                if (userEmail) {
-                    // Get current selections
-                    let currentSelections = $('#notification_users').val() || [];
-                    // Add the assigned user's email if not already selected
-                    if (!currentSelections.includes(userEmail)) {
-                        currentSelections.push(userEmail);
-                        $('#notification_users').val(currentSelections).trigger('change');
-                    }
-                }
-            }
-        });
-        
-        // WARRANTY EXPIRY DATE CALCULATION
-        function calculateWarrantyExpiry() {
-            const purchaseDate = document.getElementById('purchase_date').value;
-            const warrantyDuration = parseInt(document.getElementById('warranty_duration').value);
-            const expiryDisplay = document.getElementById('warranty_expiry_display');
-            
-            if (purchaseDate && warrantyDuration && warrantyDuration > 0) {
-                // Calculate expiry date
-                const purchase = new Date(purchaseDate);
-                const expiry = new Date(purchase);
-                expiry.setMonth(expiry.getMonth() + warrantyDuration);
-                
-                // Format the date
-                const expiryDateString = expiry.toISOString().slice(0, 10);
-                expiryDisplay.value = expiryDateString;
-                expiryDisplay.classList.remove('is-invalid');
-                expiryDisplay.classList.add('is-valid');
-                
-                // Calculate days remaining
-                const today = new Date();
-                const timeDiff = expiry.getTime() - today.getTime();
-                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                
-                if (daysDiff < 0) {
-                    expiryDisplay.classList.remove('is-valid');
-                    expiryDisplay.classList.add('is-invalid');
-                    expiryDisplay.value = expiryDateString + ' (EXPIRED)';
-                } else if (daysDiff <= 30) {
-                    expiryDisplay.classList.remove('is-valid');
-                    expiryDisplay.classList.add('text-warning');
-                    expiryDisplay.value = expiryDateString + ` (${daysDiff} days remaining)`;
-                } else {
-                    expiryDisplay.value = expiryDateString + ` (${daysDiff} days remaining)`;
-                }
-            } else {
-                expiryDisplay.value = '';
-                expiryDisplay.classList.remove('is-valid', 'is-invalid', 'text-warning');
-            }
-        }
-        
-        // Add event listeners for warranty calculation
-        document.getElementById('purchase_date').addEventListener('change', calculateWarrantyExpiry);
-        document.getElementById('warranty_duration').addEventListener('input', calculateWarrantyExpiry);
-        
-        // Form validation before submission
-        document.getElementById('assetForm').addEventListener('submit', function(e) {
-            const purchaseDate = document.getElementById('purchase_date').value;
-            const warrantyDuration = parseInt(document.getElementById('warranty_duration').value);
-            
-            if (!purchaseDate) {
-                e.preventDefault();
-                alert('Please select a purchase date.');
-                document.getElementById('purchase_date').focus();
-                return false;
-            }
-            
-            if (!warrantyDuration || warrantyDuration <= 0) {
-                e.preventDefault();
-                alert('Please enter a valid warranty duration (greater than 0 months).');
-                document.getElementById('warranty_duration').focus();
-                return false;
-            }
-            
-            // Additional validation: ensure warranty expiry can be calculated
-            if (!document.getElementById('warranty_expiry_display').value) {
-                e.preventDefault();
-                alert('Unable to calculate warranty expiry date. Please check the purchase date and warranty duration.');
-                return false;
-            }
-        });
-        
-        // Initial calculation on page load
-        calculateWarrantyExpiry();
-    });
-</script>
-
-<script>
-// Input validation for restricted characters
 document.addEventListener('DOMContentLoaded', function() {
-    // Define the restricted characters
-    const restrictedChars = /[!';\#\$%\^\&\*\{\}\]\[<>\?\|]/g;
+    console.log('Create asset form initialized');
     
-    // Get all restricted input fields
-    const restrictedInputs = document.querySelectorAll('.restricted-input');
+    // =================================
+    // 1. INITIALIZE THIRD-PARTY LIBRARIES
+    // =================================
     
-    // Function to validate input in real-time
-    function validateInput(input) {
-        const value = input.value;
-        const fieldName = input.name.replace('_', ' ');
-        const errorDiv = document.getElementById(input.id + '_error');
-        
-        if (restrictedChars.test(value)) {
-            input.classList.add('invalid-char', 'is-invalid');
-            errorDiv.textContent = `Invalid characters detected. Please remove: ! ' ; # $ % ^ & * { } ] [ < > ? |`;
-            return false;
-        } else {
-            input.classList.remove('invalid-char', 'is-invalid');
-            if (value.trim()) {
-                input.classList.add('is-valid');
-            }
-            errorDiv.textContent = '';
-            return true;
-        }
-    }
-    
-    // Function to prevent typing restricted characters
-    function preventRestrictedChars(e) {
-        const char = String.fromCharCode(e.which);
-        if (restrictedChars.test(char)) {
-            e.preventDefault();
-            
-            // Show temporary warning
-            const input = e.target;
-            const errorDiv = document.getElementById(input.id + '_error');
-            const originalText = errorDiv.textContent;
-            
-            errorDiv.textContent = `Character "${char}" is not allowed`;
-            
-            setTimeout(() => {
-                if (errorDiv.textContent === `Character "${char}" is not allowed`) {
-                    errorDiv.textContent = originalText;
-                }
-            }, 2000);
-            
-            return false;
-        }
-    }
-    
-    // Function to clean pasted content
-    function cleanPastedContent(e) {
-        setTimeout(() => {
-            const input = e.target;
-            const originalValue = input.value;
-            const cleanedValue = originalValue.replace(restrictedChars, '');
-            
-            if (originalValue !== cleanedValue) {
-                input.value = cleanedValue;
-                const errorDiv = document.getElementById(input.id + '_error');
-                errorDiv.textContent = 'Some invalid characters were removed from pasted content';
-                
-                setTimeout(() => {
-                    if (errorDiv.textContent.includes('pasted content')) {
-                        errorDiv.textContent = '';
-                    }
-                }, 3000);
-            }
-            
-            validateInput(input);
-        }, 10);
-    }
-    
-    // Apply event listeners to all restricted inputs
-    restrictedInputs.forEach(input => {
-        // Prevent typing restricted characters
-        input.addEventListener('keypress', preventRestrictedChars);
-        
-        // Validate on input (handles paste, drag-drop, etc.)
-        input.addEventListener('input', function(e) {
-            validateInput(this);
-        });
-        
-        // Clean pasted content
-        input.addEventListener('paste', cleanPastedContent);
-        
-        // Validate on blur
-        input.addEventListener('blur', function() {
-            validateInput(this);
-        });
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dropdownParent: $('body')
     });
     
-    // Update form submission validation
-    const form = document.getElementById('assetForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            let isValid = true;
-            
-            restrictedInputs.forEach(input => {
-                if (!validateInput(input)) {
-                    isValid = false;
-                }
-            });
-            
-            if (!isValid) {
-                e.preventDefault();
-                alert('Please fix the validation errors before submitting.');
-                return false;
-            }
-        });
-    }
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+    $('.select2-tags').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        tags: true,
+        tokenSeparators: [',', ' '],
+        dropdownParent: $('body')
+    });
+    
+    // Initialize Select2 for notification users
+    $('.select2-users').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Select users to notify about warranty expiration',
+        allowClear: true,
+        dropdownParent: $('body')
+    });
+    
+    // Initialize Flatpickr (date picker)
+    flatpickr(".date-picker", {
+        dateFormat: "Y-m-d",
+        allowInput: true
+    });
+    
+    // Set today's date as default for purchase date
+    document.getElementById('purchase_date').value = new Date().toISOString().slice(0, 10);
+    
+    // =================================
+    // 2. CURRENCY HANDLING
+    // =================================
+    
     const currencySelect = document.getElementById('currency_symbol');
     const customCurrency = document.querySelector('.custom-currency');
     
@@ -511,11 +308,282 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Initial state
+    // Initial state and event listener
     toggleCustomCurrency();
-    
-    // On change
     currencySelect.addEventListener('change', toggleCustomCurrency);
+    
+    // =================================
+    // 3. USER ASSIGNMENT INTEGRATION
+    // =================================
+    
+    // Auto-select assigned user in notification recipients when assigned user changes
+    $('#assigned_user_id').on('change', function() {
+        const selectedUserId = $(this).val();
+        if (selectedUserId) {
+            // Find the corresponding user in notification users
+            const userEmail = $(`#notification_users option[data-user-id="${selectedUserId}"]`).val();
+            if (userEmail) {
+                // Get current selections
+                let currentSelections = $('#notification_users').val() || [];
+                // Add the assigned user's email if not already selected
+                if (!currentSelections.includes(userEmail)) {
+                    currentSelections.push(userEmail);
+                    $('#notification_users').val(currentSelections).trigger('change');
+                }
+            }
+        }
+    });
+    
+    // =================================
+    // 4. WARRANTY EXPIRY CALCULATION
+    // =================================
+    
+    function calculateWarrantyExpiry() {
+        const purchaseDate = document.getElementById('purchase_date').value;
+        const warrantyDuration = parseInt(document.getElementById('warranty_duration').value);
+        const expiryDisplay = document.getElementById('warranty_expiry_display');
+        
+        if (purchaseDate && warrantyDuration && warrantyDuration > 0) {
+            // Calculate expiry date
+            const purchase = new Date(purchaseDate);
+            const expiry = new Date(purchase);
+            expiry.setMonth(expiry.getMonth() + warrantyDuration);
+            
+            // Format the date
+            const expiryDateString = expiry.toISOString().slice(0, 10);
+            expiryDisplay.value = expiryDateString;
+            expiryDisplay.classList.remove('is-invalid', 'text-warning');
+            expiryDisplay.classList.add('is-valid');
+            
+            // Calculate days remaining
+            const today = new Date();
+            const timeDiff = expiry.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            if (daysDiff < 0) {
+                expiryDisplay.classList.remove('is-valid');
+                expiryDisplay.classList.add('is-invalid');
+                expiryDisplay.value = expiryDateString + ' (EXPIRED)';
+            } else if (daysDiff <= 30) {
+                expiryDisplay.classList.remove('is-valid', 'is-invalid');
+                expiryDisplay.classList.add('text-warning');
+                expiryDisplay.value = expiryDateString + ` (${daysDiff} days remaining)`;
+            } else {
+                expiryDisplay.value = expiryDateString + ` (${daysDiff} days remaining)`;
+            }
+        } else {
+            expiryDisplay.value = '';
+            expiryDisplay.classList.remove('is-valid', 'is-invalid', 'text-warning');
+        }
+    }
+    
+    // Add event listeners for warranty calculation
+    document.getElementById('purchase_date').addEventListener('change', calculateWarrantyExpiry);
+    document.getElementById('warranty_duration').addEventListener('input', calculateWarrantyExpiry);
+    
+    // Initial calculation on page load
+    calculateWarrantyExpiry();
+    
+    // =================================
+    // 5. INPUT VALIDATION
+    // =================================
+    
+    // Define restricted characters
+    const restrictedChars = /[!';\#\$%\^\&\*\{\}\]\[<>\?\|]/g;
+    const restrictedInputs = document.querySelectorAll('.restricted-input');
+    
+    function validateInput(input) {
+        const value = input.value;
+        const errorDiv = document.getElementById(input.id + '_error');
+        
+        if (restrictedChars.test(value)) {
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+            if (errorDiv) {
+                errorDiv.textContent = 'Invalid characters detected. Please remove: ! \' ; # $ % ^ & * { } ] [ < > ? |';
+            }
+            return false;
+        } else {
+            input.classList.remove('is-invalid');
+            if (value.trim()) {
+                input.classList.add('is-valid');
+            } else {
+                input.classList.remove('is-valid');
+            }
+            if (errorDiv) {
+                errorDiv.textContent = '';
+            }
+            return true;
+        }
+    }
+    
+    function preventRestrictedChars(e) {
+        const char = String.fromCharCode(e.which);
+        if (restrictedChars.test(char)) {
+            e.preventDefault();
+            
+            // Show temporary warning
+            const input = e.target;
+            const errorDiv = document.getElementById(input.id + '_error');
+            const originalText = errorDiv ? errorDiv.textContent : '';
+            
+            if (errorDiv) {
+                errorDiv.textContent = `Character "${char}" is not allowed`;
+                setTimeout(() => {
+                    if (errorDiv.textContent === `Character "${char}" is not allowed`) {
+                        errorDiv.textContent = originalText;
+                    }
+                }, 2000);
+            }
+            
+            return false;
+        }
+    }
+    
+    function cleanPastedContent(e) {
+        setTimeout(() => {
+            const input = e.target;
+            const originalValue = input.value;
+            const cleanedValue = originalValue.replace(restrictedChars, '');
+            
+            if (originalValue !== cleanedValue) {
+                input.value = cleanedValue;
+                const errorDiv = document.getElementById(input.id + '_error');
+                if (errorDiv) {
+                    errorDiv.textContent = 'Some invalid characters were removed from pasted content';
+                    setTimeout(() => {
+                        if (errorDiv.textContent.includes('pasted content')) {
+                            errorDiv.textContent = '';
+                        }
+                    }, 3000);
+                }
+            }
+            
+            validateInput(input);
+        }, 10);
+    }
+    
+    // Apply event listeners to all restricted inputs
+    restrictedInputs.forEach(input => {
+        input.addEventListener('keypress', preventRestrictedChars);
+        input.addEventListener('input', function() { validateInput(this); });
+        input.addEventListener('paste', cleanPastedContent);
+        input.addEventListener('blur', function() { validateInput(this); });
+    });
+    
+    // Email validation
+    const emailInput = document.getElementById('vendor_email');
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const errorDiv = document.getElementById('vendor_email_error');
+            
+            if (this.value && !emailPattern.test(this.value)) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                if (errorDiv) {
+                    errorDiv.textContent = 'Please enter a valid email address';
+                }
+            } else if (this.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+                if (errorDiv) {
+                    errorDiv.textContent = '';
+                }
+            } else {
+                this.classList.remove('is-valid', 'is-invalid');
+                if (errorDiv) {
+                    errorDiv.textContent = '';
+                }
+            }
+        });
+    }
+    
+    // =================================
+    // 6. FORM SUBMISSION HANDLING
+    // =================================
+    
+    const assetForm = document.getElementById('assetForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    assetForm.addEventListener('submit', function(e) {
+        console.log('Form submission started');
+        
+        // Basic validation
+        const purchaseDate = document.getElementById('purchase_date').value;
+        const warrantyDuration = parseInt(document.getElementById('warranty_duration').value);
+        const productName = document.getElementById('product_name').value.trim();
+        
+        if (!productName) {
+            e.preventDefault();
+            alert('Please enter a product name.');
+            document.getElementById('product_name').focus();
+            return false;
+        }
+        
+        if (!purchaseDate) {
+            e.preventDefault();
+            alert('Please select a purchase date.');
+            document.getElementById('purchase_date').focus();
+            return false;
+        }
+        
+        if (!warrantyDuration || warrantyDuration <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid warranty duration (greater than 0 months).');
+            document.getElementById('warranty_duration').focus();
+            return false;
+        }
+        
+        // Validate restricted inputs
+        let hasValidationErrors = false;
+        restrictedInputs.forEach(input => {
+            if (!validateInput(input)) {
+                hasValidationErrors = true;
+            }
+        });
+        
+        // Validate email if provided
+        if (emailInput && emailInput.value) {
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(emailInput.value)) {
+                hasValidationErrors = true;
+                emailInput.classList.add('is-invalid');
+                const errorDiv = document.getElementById('vendor_email_error');
+                if (errorDiv) {
+                    errorDiv.textContent = 'Please enter a valid email address';
+                }
+            }
+        }
+        
+        // Additional validation: ensure warranty expiry can be calculated
+        if (!document.getElementById('warranty_expiry_display').value) {
+            e.preventDefault();
+            alert('Unable to calculate warranty expiry date. Please check the purchase date and warranty duration.');
+            return false;
+        }
+        
+        if (hasValidationErrors) {
+            e.preventDefault();
+            alert('Please fix the validation errors before submitting.');
+            
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+            return false;
+        }
+        
+        console.log('Form validation passed, submitting...');
+        
+        // Disable submit button to prevent double submission
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating...';
+    });
+    
+    console.log('Create asset form setup complete');
 });
 </script>
 {% endblock %}
