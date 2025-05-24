@@ -1,0 +1,99 @@
+# app/templates/auth/login_with_sso.html - Updated login template
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="auth-form">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3>
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        {% if show_2fa %}
+                            Two-Factor Authentication
+                        {% else %}
+                            Login to Asset Lookup
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if show_2fa %}
+                        <!-- 2FA form remains the same -->
+                        <!-- ... existing 2FA code ... -->
+                    {% else %}
+                        <!-- SSO Login Option -->
+                        {% if oidc_enabled %}
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{{ url_for('oidc_auth.oidc_login') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-key me-2"></i>Sign in with SSO
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <small class="text-muted">or</small>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Regular Login Form -->
+                        <form method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       name="username" 
+                                       value="{{ username or '' }}"
+                                       required 
+                                       autofocus>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       required>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" 
+                                       class="form-check-input" 
+                                       id="remember" 
+                                       name="remember">
+                                <label class="form-check-label" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-outline-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login with Password
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr>
+                        
+                        <div class="text-center">
+                            <a href="{{ url_for('auth.reset_password_request') }}" class="text-decoration-none">
+                                <i class="fas fa-key me-1"></i>Forgot your password?
+                            </a>
+                        </div>
+                        
+                        {% if config.ALLOW_REGISTRATION %}
+                        <div class="text-center mt-2">
+                            <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                                <i class="fas fa-user-plus me-1"></i>Create an account
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

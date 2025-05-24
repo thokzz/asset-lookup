@@ -17,6 +17,10 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
+    # Add OIDC enabled check to template context
+    from app.utils.oidc import oidc_client
+    oidc_enabled = oidc_client.is_enabled()
+    
     if current_user.is_authenticated:
         return redirect(url_for('asset.dashboard'))
         
@@ -50,7 +54,8 @@ def login():
                     return render_template('auth/login.html', 
                                          title='Login', 
                                          show_2fa=True,
-                                         username=user.username)  # Use actual username
+                                         username=user.username,
+                                         oidc_enabled=oidc_enabled)
             else:
                 # User not found or inactive - clear session and restart
                 session.pop('pending_user_id', None)
@@ -60,7 +65,9 @@ def login():
         # Handle initial login (username/password)
         if not username or not password:
             flash('Both username and password are required.', 'danger')
-            return render_template('auth/login.html', title='Login')
+            return render_template('auth/login.html', 
+                                 title='Login',
+                                 oidc_enabled=oidc_enabled)
             
         # Skip password verification if this is a 2FA form submission
         if password == 'submitted':
@@ -78,7 +85,8 @@ def login():
                 return render_template('auth/login.html', 
                                      title='Login', 
                                      show_2fa=True,
-                                     username=user.username)
+                                     username=user.username,
+                                     oidc_enabled=oidc_enabled)
             else:
                 # Regular login without 2FA
                 login_user(user, remember=remember)
@@ -107,7 +115,16 @@ def login():
                 flash('Invalid password. Please try again.', 'danger')
                 log_login(user, success=False, description="Invalid password")
             
-    return render_template('auth/login.html', title='Login')
+            # Return to login form with error, preserving username
+            return render_template('auth/login.html', 
+                                 title='Login',
+                                 username=username,
+                                 oidc_enabled=oidc_enabled)
+            
+    # GET request - show login form
+    return render_template('auth/login.html', 
+                         title='Login',
+                         oidc_enabled=oidc_enabled)
 
 @auth.route('/setup-2fa', methods=['GET', 'POST'])
 @login_required

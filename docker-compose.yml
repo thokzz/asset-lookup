@@ -4,9 +4,9 @@ services:
   web:
     build: .
     image: asset-lookup:latest
-    container_name: asset-lookup-web
+    container_name: asset-lookup-web2
     ports:
-      - "3443:5000"
+      - "3444:5000"
     volumes:
       - ./app:/app/app
       - ./uploads:/app/app/static/uploads

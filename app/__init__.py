@@ -50,6 +50,10 @@ def create_app():
     
     # CRITICAL: Import all models BEFORE creating tables
     with app.app_context():
+        # Initialize OIDC client within application context
+        from app.utils.oidc import oidc_client
+        oidc_client.init_app(app)
+        
         app.logger.info("Importing all models...")
         try:
             # Import all models explicitly to ensure they're registered
@@ -138,6 +142,7 @@ def create_app():
     from app.routes.api import api
     from app.routes.notification import notification
     from app.routes.static_pages import static_pages
+    from app.routes.oidc_auth import oidc_auth
     
     app.register_blueprint(static_pages)    
     app.register_blueprint(auth)
@@ -145,6 +150,7 @@ def create_app():
     app.register_blueprint(admin)
     app.register_blueprint(api)
     app.register_blueprint(notification)
+    app.register_blueprint(oidc_auth)
     
     # Error handlers
     @app.errorhandler(404)

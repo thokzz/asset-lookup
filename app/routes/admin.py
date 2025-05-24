@@ -114,6 +114,54 @@ def debug_2fa_config():
     
     return html
 
+@admin.route('/admin/oidc-settings', methods=['POST'])
+@login_required
+def oidc_settings():
+    """Handle OIDC settings update"""
+    if not current_user.is_admin:
+        flash('You do not have permission to access this area.', 'danger')
+        return redirect(url_for('asset.dashboard'))
+    
+    try:
+        from app.utils.config_service import ConfigService
+        
+        # Update basic OIDC settings
+        ConfigService.set_setting('OIDC_ENABLED', 'oidc_enabled' in request.form)
+        ConfigService.set_setting('OIDC_AUTO_CREATE_USERS', 'oidc_auto_create_users' in request.form)
+        ConfigService.set_setting('OIDC_UPDATE_ROLES_ON_LOGIN', 'oidc_update_roles' in request.form)
+        ConfigService.set_setting('OIDC_CLIENT_ID', request.form.get('oidc_client_id', ''))
+        ConfigService.set_setting('OIDC_CLIENT_SECRET', request.form.get('oidc_client_secret', ''))
+        ConfigService.set_setting('OIDC_DISCOVERY_URL', request.form.get('oidc_discovery_url', ''))
+        ConfigService.set_setting('OIDC_ISSUER', request.form.get('oidc_issuer', ''))
+        ConfigService.set_setting('OIDC_DEFAULT_ROLE', request.form.get('oidc_default_role', 'user'))
+        
+        # Update claim mappings
+        ConfigService.set_setting('OIDC_EMAIL_CLAIM', request.form.get('oidc_email_claim', 'email'))
+        ConfigService.set_setting('OIDC_USERNAME_CLAIM', request.form.get('oidc_username_claim', 'preferred_username'))
+        ConfigService.set_setting('OIDC_FIRST_NAME_CLAIM', request.form.get('oidc_first_name_claim', 'given_name'))
+        ConfigService.set_setting('OIDC_LAST_NAME_CLAIM', request.form.get('oidc_last_name_claim', 'family_name'))
+        ConfigService.set_setting('OIDC_GROUPS_CLAIM', request.form.get('oidc_groups_claim', 'groups'))
+        ConfigService.set_setting('OIDC_ROLE_MAPPING', request.form.get('oidc_role_mapping', '{}'))
+        
+        # Log the change
+        log_activity(
+            action="UPDATE",
+            resource_type="SystemSettings",
+            description="Updated OIDC/SSO settings"
+        )
+        
+        # Reinitialize OIDC client
+        from app.utils.oidc import oidc_client
+        oidc_client.init_app(current_app)
+        
+        flash('OIDC settings updated successfully!', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error updating OIDC settings: {str(e)}")
+        flash(f'Error updating OIDC settings: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.settings'))
+
 @admin.route('/admin/audit')
 @login_required
 def audit_logs():
@@ -448,7 +496,8 @@ def delete_group(group_id):
     flash('Group deleted successfully!', 'success')
     return redirect(url_for('admin.group_list'))
 
-# Settings & SMTP Configuration - UPDATED WITH 2FA SUPPORT
+#Settings
+
 @admin.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -504,6 +553,33 @@ def settings():
                     db.session.commit()
                     flash('2FA disabled system-wide for all users.', 'info')
                     
+        elif 'oidc_enabled' in request.form or any(key.startswith('oidc_') for key in request.form.keys()):  # OIDC Settings form
+            # Update OIDC settings
+            settings['OIDC_ENABLED'] = 'oidc_enabled' in request.form
+            settings['OIDC_AUTO_CREATE_USERS'] = 'oidc_auto_create_users' in request.form
+            settings['OIDC_UPDATE_ROLES_ON_LOGIN'] = 'oidc_update_roles_on_login' in request.form
+            settings['OIDC_CLIENT_ID'] = request.form.get('oidc_client_id', '')
+            settings['OIDC_DISCOVERY_URL'] = request.form.get('oidc_discovery_url', '')
+            settings['OIDC_ISSUER'] = request.form.get('oidc_issuer', '')
+            settings['OIDC_DEFAULT_ROLE'] = request.form.get('oidc_default_role', 'user')
+            settings['OIDC_EMAIL_CLAIM'] = request.form.get('oidc_email_claim', 'email')
+            settings['OIDC_USERNAME_CLAIM'] = request.form.get('oidc_username_claim', 'preferred_username')
+            settings['OIDC_FIRST_NAME_CLAIM'] = request.form.get('oidc_first_name_claim', 'given_name')
+            settings['OIDC_LAST_NAME_CLAIM'] = request.form.get('oidc_last_name_claim', 'family_name')
+            settings['OIDC_GROUPS_CLAIM'] = request.form.get('oidc_groups_claim', 'groups')
+            settings['OIDC_ROLE_MAPPING'] = request.form.get('oidc_role_mapping', '{}')
+            
+            # Only update client secret if provided
+            if request.form.get('oidc_client_secret'):
+                settings['OIDC_CLIENT_SECRET'] = request.form.get('oidc_client_secret')
+            
+            # Log OIDC settings change
+            log_activity(
+                action="UPDATE",
+                resource_type="SystemSettings",
+                description=f"OIDC settings updated. OIDC {'enabled' if settings['OIDC_ENABLED'] else 'disabled'}"
+            )
+                    
         else:  # SMTP Settings form
             # Update only SMTP settings
             settings['MAIL_SERVER'] = request.form.get('mail_server')
@@ -524,7 +600,7 @@ def settings():
         from app.utils.config_service import ConfigService
         ConfigService.refresh_config()
         
-        # Update current app config explicitly
+        # Update current app config explicitly for existing settings
         if 'ALLOW_REGISTRATION' in settings:
             current_app.config['ALLOW_REGISTRATION'] = settings['ALLOW_REGISTRATION']
         if 'TWO_FACTOR_ENABLED' in settings:
@@ -544,6 +620,19 @@ def settings():
         if 'MAIL_DEFAULT_SENDER' in settings:
             current_app.config['MAIL_DEFAULT_SENDER'] = settings['MAIL_DEFAULT_SENDER']
         
+        # Update current app config explicitly for OIDC settings
+        oidc_settings = [
+            'OIDC_ENABLED', 'OIDC_AUTO_CREATE_USERS', 'OIDC_UPDATE_ROLES_ON_LOGIN',
+            'OIDC_CLIENT_ID', 'OIDC_CLIENT_SECRET', 'OIDC_DISCOVERY_URL', 'OIDC_ISSUER',
+            'OIDC_DEFAULT_ROLE', 'OIDC_EMAIL_CLAIM', 'OIDC_USERNAME_CLAIM',
+            'OIDC_FIRST_NAME_CLAIM', 'OIDC_LAST_NAME_CLAIM', 'OIDC_GROUPS_CLAIM',
+            'OIDC_ROLE_MAPPING'
+        ]
+        
+        for setting in oidc_settings:
+            if setting in settings:
+                current_app.config[setting] = settings[setting]
+        
         # Log the settings change
         log_activity(
             action="UPDATE",
@@ -557,7 +646,10 @@ def settings():
     # Load settings for the template
     settings = load_settings()
     
-    # Create a config object for the template
+    # Import ConfigService for OIDC configuration
+    from app.utils.config_service import ConfigService
+    
+    # Create a config object for the template with existing settings
     config = {
         'ALLOW_REGISTRATION': settings.get('ALLOW_REGISTRATION', current_app.config.get('ALLOW_REGISTRATION', True)),
         'TWO_FACTOR_ENABLED': settings.get('TWO_FACTOR_ENABLED', current_app.config.get('TWO_FACTOR_ENABLED', False)),
@@ -569,6 +661,27 @@ def settings():
         'MAIL_PASSWORD': settings.get('MAIL_PASSWORD', current_app.config.get('MAIL_PASSWORD', '')),
         'MAIL_DEFAULT_SENDER': settings.get('MAIL_DEFAULT_SENDER', current_app.config.get('MAIL_DEFAULT_SENDER', ''))
     }
+    
+    # Add OIDC settings to config for template
+    oidc_config = {
+        'OIDC_ENABLED': ConfigService.get_bool('OIDC_ENABLED', False),
+        'OIDC_AUTO_CREATE_USERS': ConfigService.get_bool('OIDC_AUTO_CREATE_USERS', True),
+        'OIDC_UPDATE_ROLES_ON_LOGIN': ConfigService.get_bool('OIDC_UPDATE_ROLES_ON_LOGIN', False),
+        'OIDC_CLIENT_ID': ConfigService.get_setting('OIDC_CLIENT_ID', ''),
+        'OIDC_CLIENT_SECRET': ConfigService.get_setting('OIDC_CLIENT_SECRET', ''),
+        'OIDC_DISCOVERY_URL': ConfigService.get_setting('OIDC_DISCOVERY_URL', ''),
+        'OIDC_ISSUER': ConfigService.get_setting('OIDC_ISSUER', ''),
+        'OIDC_DEFAULT_ROLE': ConfigService.get_setting('OIDC_DEFAULT_ROLE', 'user'),
+        'OIDC_EMAIL_CLAIM': ConfigService.get_setting('OIDC_EMAIL_CLAIM', 'email'),
+        'OIDC_USERNAME_CLAIM': ConfigService.get_setting('OIDC_USERNAME_CLAIM', 'preferred_username'),
+        'OIDC_FIRST_NAME_CLAIM': ConfigService.get_setting('OIDC_FIRST_NAME_CLAIM', 'given_name'),
+        'OIDC_LAST_NAME_CLAIM': ConfigService.get_setting('OIDC_LAST_NAME_CLAIM', 'family_name'),
+        'OIDC_GROUPS_CLAIM': ConfigService.get_setting('OIDC_GROUPS_CLAIM', 'groups'),
+        'OIDC_ROLE_MAPPING': ConfigService.get_setting('OIDC_ROLE_MAPPING', '{}'),
+    }
+    
+    # Merge OIDC config with existing config
+    config.update(oidc_config)
     
     # Get the current time for display
     from app.utils.time_utils import localnow

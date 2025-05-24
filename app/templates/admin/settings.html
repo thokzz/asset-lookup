@@ -129,6 +129,225 @@
     </div>
 </div>
 
+<!-- OIDC/SSO Settings Card - MOVED OUTSIDE 2FA conditional -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Single Sign-On (OIDC) Settings</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Configure OpenID Connect for Single Sign-On authentication. Users can login with their corporate credentials.
+        </div>
+        
+        <form method="post" action="{{ url_for('admin.oidc_settings') }}">
+            <!-- Basic OIDC Settings -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="oidc_enabled" name="oidc_enabled" 
+                                   {% if config.OIDC_ENABLED %}checked{% endif %}>
+                            <label class="form-check-label" for="oidc_enabled">
+                                <strong>Enable OIDC/SSO</strong>
+                            </label>
+                        </div>
+                        <div class="form-text">Enable Single Sign-On using OpenID Connect</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="oidc_auto_create_users" name="oidc_auto_create_users" 
+                                   {% if config.OIDC_AUTO_CREATE_USERS %}checked{% endif %}>
+                            <label class="form-check-label" for="oidc_auto_create_users">
+                                <strong>Auto-create Users</strong>
+                            </label>
+                        </div>
+                        <div class="form-text">Automatically create accounts for new SSO users</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Provider Configuration -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="oidc_client_id" class="form-label">Client ID</label>
+                        <input type="text" class="form-control" id="oidc_client_id" name="oidc_client_id" 
+                               value="{{ config.OIDC_CLIENT_ID or '' }}"
+                               placeholder="your-client-id">
+                        <div class="form-text">Client ID from your OIDC provider</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="oidc_client_secret" class="form-label">Client Secret</label>
+                        <input type="password" class="form-control" id="oidc_client_secret" name="oidc_client_secret" 
+                               value="{{ config.OIDC_CLIENT_SECRET or '' }}"
+                               placeholder="your-client-secret">
+                        <div class="form-text">Client secret from your OIDC provider</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="oidc_discovery_url" class="form-label">Discovery URL</label>
+                        <input type="url" class="form-control" id="oidc_discovery_url" name="oidc_discovery_url" 
+                               value="{{ config.OIDC_DISCOVERY_URL or '' }}"
+                               placeholder="https://your-provider.com/.well-known/openid_configuration">
+                        <div class="form-text">OIDC discovery endpoint (well-known configuration)</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="oidc_issuer" class="form-label">Issuer</label>
+                        <input type="url" class="form-control" id="oidc_issuer" name="oidc_issuer" 
+                               value="{{ config.OIDC_ISSUER or '' }}"
+                               placeholder="https://your-provider.com">
+                        <div class="form-text">OIDC issuer URL for token validation</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Management Settings -->
+            <h6 class="mt-4 mb-3">User Management</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="oidc_default_role" class="form-label">Default Role</label>
+                        <select class="form-select" id="oidc_default_role" name="oidc_default_role">
+                            <option value="user" {% if config.OIDC_DEFAULT_ROLE == 'user' %}selected{% endif %}>User</option>
+                            <option value="group_admin" {% if config.OIDC_DEFAULT_ROLE == 'group_admin' %}selected{% endif %}>Group Admin</option>
+                            <option value="admin" {% if config.OIDC_DEFAULT_ROLE == 'admin' %}selected{% endif %}>Administrator</option>
+                        </select>
+                        <div class="form-text">Default role for new SSO users</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="oidc_update_roles" name="oidc_update_roles" 
+                                   {% if config.OIDC_UPDATE_ROLES_ON_LOGIN %}checked{% endif %}>
+                            <label class="form-check-label" for="oidc_update_roles">
+                                <strong>Update Roles on Login</strong>
+                            </label>
+                        </div>
+                        <div class="form-text">Update user roles based on OIDC groups</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Claim Mapping -->
+            <h6 class="mt-4 mb-3">Claim Mapping</h6>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="oidc_email_claim" class="form-label">Email Claim</label>
+                        <input type="text" class="form-control" id="oidc_email_claim" name="oidc_email_claim" 
+                               value="{{ config.OIDC_EMAIL_CLAIM or 'email' }}">
+                        <div class="form-text">OIDC claim for user email</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="oidc_username_claim" class="form-label">Username Claim</label>
+                        <input type="text" class="form-control" id="oidc_username_claim" name="oidc_username_claim" 
+                               value="{{ config.OIDC_USERNAME_CLAIM or 'preferred_username' }}">
+                        <div class="form-text">OIDC claim for username</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="oidc_first_name_claim" class="form-label">First Name Claim</label>
+                        <input type="text" class="form-control" id="oidc_first_name_claim" name="oidc_first_name_claim" 
+                               value="{{ config.OIDC_FIRST_NAME_CLAIM or 'given_name' }}">
+                        <div class="form-text">OIDC claim for first name</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="oidc_last_name_claim" class="form-label">Last Name Claim</label>
+                        <input type="text" class="form-control" id="oidc_last_name_claim" name="oidc_last_name_claim" 
+                               value="{{ config.OIDC_LAST_NAME_CLAIM or 'family_name' }}">
+                        <div class="form-text">OIDC claim for last name</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="oidc_groups_claim" class="form-label">Groups Claim</label>
+                        <input type="text" class="form-control" id="oidc_groups_claim" name="oidc_groups_claim" 
+                               value="{{ config.OIDC_GROUPS_CLAIM or 'groups' }}">
+                        <div class="form-text">OIDC claim containing user groups</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="oidc_role_mapping" class="form-label">Role Mapping (JSON)</label>
+                        <textarea class="form-control" id="oidc_role_mapping" name="oidc_role_mapping" rows="3"
+                                  placeholder='{"admin_group": "admin", "manager_group": "group_admin"}'>{{ config.OIDC_ROLE_MAPPING or '{}' }}</textarea>
+                        <div class="form-text">Map OIDC groups to application roles</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Provider Examples -->
+            <div class="alert alert-secondary mt-4">
+                <h6><i class="fas fa-info-circle me-2"></i>Common Provider Settings</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Azure AD:</strong><br>
+                        <small>Discovery URL: <code>https://login.microsoftonline.com/{tenant}/v2.0/.well-known/openid_configuration</code></small><br>
+                        <small>Issuer: <code>https://login.microsoftonline.com/{tenant}/v2.0</code></small><br>
+                        <small>Redirect URI: <code>{{ request.host_url }}auth/oidc/callback</code></small>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Google:</strong><br>
+                        <small>Discovery URL: <code>https://accounts.google.com/.well-known/openid_configuration</code></small><br>
+                        <small>Issuer: <code>https://accounts.google.com</code></small><br>
+                        <small>Redirect URI: <code>{{ request.host_url }}auth/oidc/callback</code></small>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>Keycloak:</strong><br>
+                        <small>Discovery URL: <code>https://your-keycloak.com/auth/realms/{realm}/.well-known/openid_configuration</code></small><br>
+                        <small>Issuer: <code>https://your-keycloak.com/auth/realms/{realm}</code></small>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Okta:</strong><br>
+                        <small>Discovery URL: <code>https://your-org.okta.com/.well-known/openid_configuration</code></small><br>
+                        <small>Issuer: <code>https://your-org.okta.com</code></small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Save OIDC Settings</button>
+            </div>
+        </form>
+        
+        <!-- Test Connection -->
+        {% if config.OIDC_ENABLED %}
+        <hr class="my-4">
+        <h6>Test OIDC Configuration</h6>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('oidc_auth.oidc_login') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                <i class="fas fa-external-link-alt me-2"></i>Test SSO Login
+            </a>
+            <button type="button" class="btn btn-outline-info btn-sm" onclick="testOidcConfig()">
+                <i class="fas fa-check me-2"></i>Validate Configuration
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <div class="card mb-4" id="smtp-settings">
     <div class="card-header">
         <h5 class="card-title mb-0">Email (SMTP) Settings</h5>
@@ -252,6 +471,34 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error fetching current time:', error);
                 document.getElementById('current-app-time').textContent = 'Error loading time';
+            });
+    }
+    
+    function testOidcConfig() {
+        const discoveryUrl = document.getElementById('oidc_discovery_url').value;
+        if (!discoveryUrl) {
+            alert('Please enter a Discovery URL first');
+            return;
+        }
+        
+        fetch(discoveryUrl)
+            .then(response => response.json())
+            .then(data => {
+                const issuer = data.issuer;
+                const authEndpoint = data.authorization_endpoint;
+                const tokenEndpoint = data.token_endpoint;
+                
+                const message = `Configuration Valid!\n\nIssuer: ${issuer}\nAuth Endpoint: ${authEndpoint}\nToken Endpoint: ${tokenEndpoint}`;
+                alert(message);
+                
+                // Auto-fill issuer if empty
+                const issuerField = document.getElementById('oidc_issuer');
+                if (!issuerField.value && issuer) {
+                    issuerField.value = issuer;
+                }
+            })
+            .catch(error => {
+                alert(`Configuration Test Failed: ${error.message}`);
             });
     }
     
