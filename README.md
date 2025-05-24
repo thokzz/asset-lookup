@@ -2,7 +2,9 @@
 
 A powerful, full-featured web application for tracking and managing organizational assets with advanced warranty notification capabilities.
 
-![Asset Lookup Logo](app/static/image/AL_logo.png)
+<div align="center">
+<img src="app/static/image/AL_logo.png" alt="Asset Lookup Logo" width="50%">
+</div>
 
 ## Support This Project
 
@@ -292,6 +294,8 @@ Additional File Types - Modify ALLOWED_EXTENSIONS in configuration
 Custom Notifications - Extend notification templates and triggers
 
 Integration APIs - Build custom integrations using the REST API
+
+[![Star History Chart](https://api.star-history.com/svg?repos=thokzz/asset-lookup&type=Date)](https://star-history.com/#thokzz/asset-lookup&Date)
 
 # Theming
 
