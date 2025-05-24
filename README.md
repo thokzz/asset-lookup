@@ -77,7 +77,9 @@ Default login: admin / admin123
 The system creates three default users for testing:
 
 admin | admin123 | Administrator | Full system access
+
 groupadmin | groupadmin123 | Group Admin | Manage assigned groups and assets
+
 user | user123| Regular User | View and edit assigned assets
 
 ⚠️ Important: Change default passwords immediately in production!
@@ -88,55 +90,76 @@ user | user123| Regular User | View and edit assigned assets
 # Access Control
 
 Role-Based Permissions - Granular control over user capabilities
+
 Group-Based Asset Access - Users only see assets assigned to their groups
+
 Secure File Uploads - Validated file types and secure storage
+
 Input Sanitization - Protection against XSS and injection attacks
 
 # Authentication
 
 Password Hashing - Bcrypt encryption for all passwords
+
 Two-Factor Authentication - Optional TOTP-based 2FA
+
 Session Management - Secure session handling with timeout
+
 Audit Logging - Complete audit trail of all system activities
 
 # Data Protection
 
 Database Security - Parameterized queries prevent SQL injection
+
 File Security - Secure file handling and access controls
+
 Privacy Controls - Users only access authorized data
 
 # 📊 Dashboard & Analytics
 # Visual Dashboard
 
 Status Overview - Active, expiring, and expired warranty counts
+
 Interactive Charts - Warranty status distribution and expiration timeline
+
 Response Analytics - User response tracking for warranty notifications
+
 Recent Activity - Latest asset changes and notifications
 
 # Reporting Features
 
 Asset Export - CSV export with comprehensive asset data
+
 Audit Reports - Detailed activity logs with filtering options
+
 Notification Reports - Response rates and renewal decisions
+
 Custom Filtering - Advanced search across all asset attributes
 
 # 🔔 Notification System
 # Smart Alerts
 
 Initial Notifications - Sent 30 days before warranty expiration
+
 Follow-up Reminders - Escalating alerts starting 15 days before expiration
+
 Response Tracking - Users can respond directly from email notifications
+
 Automated Scheduling - Configurable frequency (hourly to daily)
 
 # Email Features
 
 HTML & Text Versions - Rich HTML emails with text fallbacks
+
 One-Click Responses - Direct links for warranty renewal decisions
+
 Personalized Content - Customized based on asset and user information
+
 Mobile-Friendly - Responsive email templates for all devices
 
 # 🛠️ API Endpoints
 # Dashboard Data
+
 http
 
 GET /api/dashboard/stats
@@ -208,7 +231,7 @@ Specify your environment (OS, Python version, etc.)
 
 This project is licensed under a Non-Commercial License.
 
-#Permitted Uses
+# Permitted Uses
 
 Personal use
 
