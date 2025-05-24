@@ -227,10 +227,6 @@ Include detailed steps to reproduce
 
 Specify your environment (OS, Python version, etc.)
 
-# 📄 License
-
-This project is licensed under a Non-Commercial License.
-
 # Permitted Uses
 
 Personal use
@@ -269,14 +265,3 @@ Issues: Report bugs on GitHub Issues
 
 Commercial Support: Contact janroldanhernandez@gmail.com
 
-Community: Join discussions in GitHub Discussions
-
-🙏 Acknowledgments
-
-Built with Flask - The web framework for Python
-
-UI powered by Bootstrap 5 - The world's most popular CSS framework
-
-Charts provided by Chart.js - Simple yet flexible JavaScript charting
-
-Icons by Font Awesome - The web's most popular icon set
