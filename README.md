@@ -165,8 +165,11 @@ GET /api/timezones
 # Extending the System
 
 Custom Fields - Add new asset attributes by extending the Asset model
+
 Additional File Types - Modify ALLOWED_EXTENSIONS in configuration
+
 Custom Notifications - Extend notification templates and triggers
+
 Integration APIs - Build custom integrations using the REST API
 
 # Theming
@@ -178,6 +181,7 @@ Logo Replacement - Update app/static/image/AL_logo.png
 Color Schemes - Customize Bootstrap variables for company branding
 
 # 📝 Changelog
+
 Version 2.0 (2025.05.02)
 
 Enhanced Notification System - Multi-stage alerts with response tracking
@@ -201,9 +205,10 @@ Include detailed steps to reproduce
 Specify your environment (OS, Python version, etc.)
 
 # 📄 License
+
 This project is licensed under a Non-Commercial License.
 
-#Permitted Uses ✅
+#Permitted Uses
 
 Personal use
 
@@ -217,7 +222,7 @@ Government use
 
 Internal business use (non-commercial)
 
-# Prohibited Uses ❌
+# Prohibited Uses
 
 Selling the software
 
@@ -228,18 +233,27 @@ Commercial products incorporating this software
 Any revenue-generating activities
 
 For commercial licensing, please contact: janroldanhernandez@gmail.com
-👨‍💻 About the Developer
+
+# 👨‍💻 About the Developer
+
 Asset Lookup was developed by Toks Hernandez to address critical needs in asset tracking and management. The platform was designed to make asset management more straightforward and efficient for organizations of all sizes.
-📞 Support
+
+# 📞 Support
 
 Documentation: Check the Wiki for detailed guides
+
 Issues: Report bugs on GitHub Issues
+
 Commercial Support: Contact janroldanhernandez@gmail.com
+
 Community: Join discussions in GitHub Discussions
 
 🙏 Acknowledgments
 
 Built with Flask - The web framework for Python
+
 UI powered by Bootstrap 5 - The world's most popular CSS framework
+
 Charts provided by Chart.js - Simple yet flexible JavaScript charting
+
 Icons by Font Awesome - The web's most popular icon set
