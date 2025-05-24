@@ -4,6 +4,12 @@ A powerful, full-featured web application for tracking and managing organization
 
 ![Asset Lookup Logo](app/static/image/AL_logo.png)
 
+## Support This Project
+
+If my work helped you, consider buying me a coffee! ☕
+
+**https://ko-fi.com/tokshernandez**
+
 ## 🚀 Features
 
 ### Core Asset Management
