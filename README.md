@@ -359,10 +359,6 @@ For commercial licensing, please contact: janroldanhernandez@gmail.com
 
 Asset Lookup was developed by Toks Hernandez to address critical needs in asset tracking and management. The platform was designed to make asset management more straightforward and efficient for organizations of all sizes.
 
-# 📞 Support
-
-Documentation: Check the Wiki for detailed guides
-
 Issues: Report bugs on GitHub Issues
 
 Commercial Support: Contact janroldanhernandez@gmail.com
