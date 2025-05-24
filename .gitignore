@@ -20,6 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 
+screenshots/
+asset-lookup/screenshots/
+
 # Flask
 
 .webassets-cache
