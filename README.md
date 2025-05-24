@@ -1,4 +1,4 @@
-# Asset Lookup - Comprehensive Asset Management System
+# Asset Lookup - Comprehensive Asset Renewal Tracking System
 
 A powerful, full-featured web application for tracking and managing organizational assets with advanced warranty notification capabilities.
 
