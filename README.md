@@ -32,6 +32,98 @@ A powerful, full-featured web application for tracking and managing organization
 - **Timezone Support** - Global timezone handling for international organizations
 - **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
 
+## Screenshots
+
+### Dashboard & Overview
+<div align="center">
+  <img src="screenshots/Asset Dashboard.png" alt="Asset Dashboard" width="800"/>
+  <p><em>Main asset dashboard showing warranty status overview and expiring assets</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Admin dashboard.png" alt="Admin Dashboard" width="800"/>
+  <p><em>Administrative dashboard with system statistics and quick actions</em></p>
+</div>
+
+### Asset Management
+<div align="center">
+  <img src="screenshots/Asset List.png" alt="Asset List" width="800"/>
+  <p><em>Comprehensive asset listing with filtering, sorting, and bulk operations</em></p>
+</div>
+
+### User & Access Management
+<div align="center">
+  <img src="screenshots/User Management.png" alt="User Management" width="800"/>
+  <p><em>User management interface with role-based permissions</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Group Management.png" alt="Group Management" width="800"/>
+  <p><em>Group management for organizing users and permissions</em></p>
+</div>
+
+### Organization & Categorization
+<div align="center">
+  <img src="screenshots/Tags Management.png" alt="Tags Management" width="800"/>
+  <p><em>Tag management system for asset categorization and filtering</em></p>
+</div>
+
+### System Configuration
+<div align="center">
+  <img src="screenshots/System Settings.png" alt="System Settings" width="800"/>
+  <p><em>System-wide configuration including timezone and registration settings</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Email SMTP Settings.png" alt="Email SMTP Settings" width="800"/>
+  <p><em>SMTP configuration for email notifications and alerts</em></p>
+</div>
+
+### Notification System
+<div align="center">
+  <img src="screenshots/Notification Settings 1.png" alt="Notification Settings Overview" width="800"/>
+  <p><em>Comprehensive notification settings and scheduling configuration</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Notification Settings 2.png" alt="Notification Settings Details" width="800"/>
+  <p><em>Advanced notification preferences and alert customization</em></p>
+</div>
+
+### Email Notifications & Responses
+<div align="center">
+  <img src="screenshots/Email Notification.png" alt="Email Notification" width="800"/>
+  <p><em>Sample warranty expiration email notification sent to users</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Email Response1.png" alt="Email Response - Renewal" width="800"/>
+  <p><em>User response interface for warranty renewal decisions</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Email Reponse2.png" alt="Email Response - Options" width="800"/>
+  <p><em>Response options for warranty expiration notifications</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Email Response3.png" alt="Email Response - Confirmation" width="800"/>
+  <p><em>Confirmation screen after user response submission</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Email Response4.png" alt="Email Response - Details" width="800"/>
+  <p><em>Detailed response tracking and management interface</em></p>
+</div>
+
+### Audit & Compliance
+<div align="center">
+  <img src="screenshots/Audit Logs.png" alt="Audit Logs" width="800"/>
+  <p><em>Comprehensive audit logging for compliance and security monitoring</em></p>
+</div>
+
+---
+
 ## 🏗️ Architecture
 
 ### Technology Stack
