@@ -353,7 +353,7 @@ Commercial products incorporating this software
 
 Any revenue-generating activities
 
-For commercial licensing, please contact: janroldanhernandez@gmail.com
+For commercial licensing, please contact: thokzz.github@gmail.com
 
 # 👨‍💻 About the Developer
 
@@ -361,5 +361,5 @@ Asset Lookup was developed by Toks Hernandez to address critical needs in asset 
 
 Issues: Report bugs on GitHub Issues
 
-Commercial Support: Contact janroldanhernandez@gmail.com
+Commercial Support: Contact thokzz.github@gmail.com
 
