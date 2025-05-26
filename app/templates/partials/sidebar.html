@@ -89,6 +89,11 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'backup.backup_settings' %}active{% endif %}" href="{{ url_for('backup.backup_settings') }}">
+                <i class="fas fa-database me-2"></i> Database Backup
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" href="{{ url_for('notification.admin_settings') }}">
                 <i class="fas fa-bell me-2"></i> Notification Settings
             </a>
