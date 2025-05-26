@@ -4,11 +4,11 @@
 
 {% block css %}
 <style>
-/* Custom Dashboard Styles - Completely Different from Warracker */
+/* Modern Dashboard Styles */
 .dashboard-hero {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 1.25rem 0;
+    padding: 2rem 0;
     margin: -1.5rem -1.5rem 2rem -1.5rem;
     border-radius: 0 0 20px 20px;
 }
@@ -17,44 +17,28 @@
     background: white;
     border: none;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     transition: all 0.3s ease;
     overflow: hidden;
+    height: 100%;
 }
 
 .metric-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
 
 .metric-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.metric-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.metric-label {
-    color: #6c757d;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .metric-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -63,101 +47,78 @@
     margin-bottom: 1rem;
 }
 
-.status-active .metric-icon { background: linear-gradient(45deg, #28a745, #20c997); }
+.status-good .metric-icon { background: linear-gradient(45deg, #28a745, #20c997); }
 .status-warning .metric-icon { background: linear-gradient(45deg, #ffc107, #fd7e14); }
 .status-danger .metric-icon { background: linear-gradient(45deg, #dc3545, #e83e8c); }
 .status-info .metric-icon { background: linear-gradient(45deg, #17a2b8, #6f42c1); }
 
-.activity-timeline {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
+.metric-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    line-height: 1;
 }
 
-.timeline-item {
-    padding: 1rem 1.5rem;
-    border-left: 4px solid transparent;
-    position: relative;
-    transition: all 0.3s ease;
+.metric-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
 }
 
-.timeline-item:hover {
-    background: #f8f9fa;
-    border-left-color: #667eea;
+.metric-subtitle {
+    color: #6c757d;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
 }
 
-.timeline-item:not(:last-child) {
-    border-bottom: 1px solid #f0f0f0;
+.metric-link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.3s ease;
 }
 
-.timeline-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    position: absolute;
-    left: -8px;
-    top: 1.5rem;
-    border: 2px solid white;
-    box-shadow: 0 0 0 2px #dee2e6;
+.metric-link:hover {
+    color: #764ba2;
 }
-
-.timeline-dot.active { background: #28a745; box-shadow: 0 0 0 2px #28a745; }
-.timeline-dot.warning { background: #ffc107; box-shadow: 0 0 0 2px #ffc107; }
-.timeline-dot.danger { background: #dc3545; box-shadow: 0 0 0 2px #dc3545; }
 
 .chart-container {
     background: white;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     padding: 1.5rem;
     height: 400px;
 }
 
-.quick-actions {
+.activity-card {
     background: white;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     overflow: hidden;
 }
 
-.action-btn {
-    display: flex;
-    align-items: center;
+.asset-item {
     padding: 1rem 1.5rem;
-    text-decoration: none;
-    color: #495057;
-    transition: all 0.3s ease;
     border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.3s ease;
 }
 
-.action-btn:last-child {
+.asset-item:last-child {
     border-bottom: none;
 }
 
-.action-btn:hover {
-    background: linear-gradient(90deg, #f8f9fa, #e9ecef);
-    color: #667eea;
-    text-decoration: none;
-    transform: translateX(5px);
+.asset-item:hover {
+    background-color: #f8f9fa;
 }
 
-.action-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    color: white;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-}
-
-.response-widget {
+.response-summary-card {
     background: white;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     overflow: hidden;
 }
 
@@ -166,57 +127,67 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
 }
 
-.response-item:last-child {
-    border-bottom: none;
+.response-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    color: white;
+    font-size: 0.9rem;
 }
 
-.response-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.badge-renewed { background: #d4edda; color: #155724; }
-.badge-pending { background: #fff3cd; color: #856404; }
-.badge-not-renew { background: #f8d7da; color: #721c24; }
-.badge-disabled { background: #e2e3e5; color: #6c757d; }
+.bg-renewed { background: linear-gradient(45deg, #28a745, #20c997); }
+.bg-pending { background: linear-gradient(45deg, #ffc107, #fd7e14); }
+.bg-not-renew { background: linear-gradient(45deg, #dc3545, #e83e8c); }
+.bg-disabled { background: linear-gradient(45deg, #6c757d, #495057); }
 
 .section-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: #495057;
     margin-bottom: 1.5rem;
-    position: relative;
-    padding-left: 1rem;
+    display: flex;
+    align-items: center;
 }
 
-.section-title::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
+.section-title i {
+    margin-right: 0.5rem;
+    color: #667eea;
+}
+
+.progress-custom {
+    height: 8px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar-custom {
     height: 100%;
-    background: linear-gradient(to bottom, #667eea, #764ba2);
-    border-radius: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 10px;
+    transition: width 0.6s ease;
 }
 
-.legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
+.time-badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
 }
 
 @media (max-width: 768px) {
     .dashboard-hero {
         margin: -1rem -1rem 1rem -1rem;
-        padding: 1rem 0;
+        padding: 1.5rem 0;
     }
     
     .metric-number {
@@ -226,6 +197,11 @@
     .chart-container {
         height: 300px;
         margin-bottom: 1rem;
+    }
+    
+    .metric-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 </style>
@@ -238,10 +214,10 @@
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="display-6 fw-bold mb-2">Asset Management Overview</h1>
-                <p class="lead mb-0">Monitor warranty status and track asset lifecycle across your organization</p>
+                <p class="lead mb-0 opacity-90">Monitor warranty status and track asset lifecycle across your organization</p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <div class="d-inline-flex align-items-center bg-white bg-opacity-10 rounded-pill px-3 py-2">
+                <div class="time-badge">
                     <i class="fas fa-clock me-2"></i>
                     <span id="current-time"></span>
                 </div>
@@ -252,212 +228,237 @@
 
 <!-- Main Dashboard Content -->
 <div class="container-fluid px-4">
-    <!-- Status Overview Chart -->
+    <!-- Status Cards Row -->
     <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="chart-container">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="section-title mb-0">Warranty Status Overview</h3>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-primary me-2">{{ total_count }} Total Assets</span>
-                        <small class="text-muted">Real-time status distribution</small>
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card status-good">
+                <div class="metric-header">
+                    <div class="flex-grow-1">
+                        <div class="metric-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="metric-label">Good Standing</div>
+                        <div class="metric-number text-success">{{ good_standing_count }}</div>
+                        <div class="metric-subtitle">31+ days remaining</div>
+                        <a href="{{ url_for('asset.asset_list', status='good_standing') }}" class="metric-link">
+                            View all <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
                 </div>
-                <canvas id="statusChart" width="100%" height="120"></canvas>
-                
-                <!-- Status Legend with Numbers -->
-                <div class="row mt-4">
-                    <div class="col-md-3 text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <div class="legend-dot bg-success me-2"></div>
-                            <span class="fw-semibold">Good Standing</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card status-warning">
+                <div class="metric-header">
+                    <div class="flex-grow-1">
+                        <div class="metric-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
-                        <div class="display-6 fw-bold text-success">{{ good_standing_count }}</div>
-                        <small class="text-muted">Active warranties (30+ days)</small>
+                        <div class="metric-label">Expiring Soon</div>
+                        <div class="metric-number text-warning">{{ expiring_count }}</div>
+                        <div class="metric-subtitle">1-30 days remaining</div>
+                        <a href="{{ url_for('asset.asset_list', status='expiring') }}" class="metric-link">
+                            View all <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
-                    <div class="col-md-3 text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <div class="legend-dot bg-warning me-2"></div>
-                            <span class="fw-semibold">Expiring Soon</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card status-danger">
+                <div class="metric-header">
+                    <div class="flex-grow-1">
+                        <div class="metric-icon">
+                            <i class="fas fa-times-circle"></i>
                         </div>
-                        <div class="display-6 fw-bold text-warning">{{ expiring_count }}</div>
-                        <small class="text-muted">Within 30 days</small>
+                        <div class="metric-label">Expired</div>
+                        <div class="metric-number text-danger">{{ expired_count }}</div>
+                        <div class="metric-subtitle">0 days remaining</div>
+                        <a href="{{ url_for('asset.asset_list', status='expired') }}" class="metric-link">
+                            View all <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
-                    <div class="col-md-3 text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <div class="legend-dot bg-danger me-2"></div>
-                            <span class="fw-semibold">Expired</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="metric-card status-info">
+                <div class="metric-header">
+                    <div class="flex-grow-1">
+                        <div class="metric-icon">
+                            <i class="fas fa-cubes"></i>
                         </div>
-                        <div class="display-6 fw-bold text-danger">{{ expired_count }}</div>
-                        <small class="text-muted">Needs attention</small>
-                    </div>
-                    <div class="col-md-3 text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <div class="legend-dot bg-primary me-2"></div>
-                            <span class="fw-semibold">Coverage Rate</span>
-                        </div>
-                        <div class="display-6 fw-bold text-primary">{{ "%.0f"|format((good_standing_count / total_count * 100) if total_count > 0 else 0) }}%</div>
-                        <small class="text-muted">Assets in good standing</small>
+                        <div class="metric-label">Total</div>
+                        <div class="metric-number text-primary">{{ total_count }}</div>
+                        <div class="metric-subtitle">All assets</div>
+                        <a href="{{ url_for('asset.asset_list') }}" class="metric-link">
+                            View all <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts and Activity Row -->
+    <!-- Charts Row -->
     <div class="row g-4 mb-4">
         <!-- Expiration Timeline Chart -->
         <div class="col-lg-8">
             <div class="chart-container">
-                <h3 class="section-title">Warranty Expiration Forecast</h3>
-                <canvas id="timelineChart" width="100%" height="300"></canvas>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="section-title mb-0">
+                        <i class="fas fa-chart-line"></i>
+                        Expiration Timeline
+                    </h3>
+                    <div class="d-flex align-items-center">
+                        {% if current_user.has_permission('CREATE') %}
+                        <a href="{{ url_for('asset.import_assets') }}" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-file-import me-1"></i> Import
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('asset.export_assets') }}" class="btn btn-sm btn-outline-secondary me-2">
+                            <i class="fas fa-file-export me-1"></i> Export
+                        </a>
+                        {% if current_user.has_permission('CREATE') %}
+                        <a href="{{ url_for('asset.create_asset') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i> Add Asset
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <canvas id="expirationTimelineChart" style="max-height: 320px; width: 100%;"></canvas>
             </div>
         </div>
         
-        <!-- Quick Actions -->
+        <!-- Notification Response Chart -->
         <div class="col-lg-4">
-            <div class="quick-actions">
-                <h3 class="section-title p-3 mb-0">Quick Actions</h3>
-                {% if current_user.has_permission('CREATE') %}
-                <a href="{{ url_for('asset.create_asset') }}" class="action-btn">
-                    <div class="action-icon">
-                        <i class="fas fa-plus"></i>
+            <div class="chart-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="section-title mb-0">
+                        <i class="fas fa-chart-pie"></i>
+                        Notification Responses {{ current_year }}
+                    </h3>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('notification.admin_settings') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                <!-- This will be populated by JavaScript -->
+                <div id="notificationResponseContainer" class="d-flex align-items-center justify-content-center" style="height: 280px;">
+                    <!-- Loading state -->
+                    <div class="text-center text-muted">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Loading response data...
                     </div>
-                    <div>
-                        <div class="fw-semibold">Add New Asset</div>
-                        <small class="text-muted">Register a new asset</small>
-                    </div>
-                </a>
-                {% endif %}
-                
-                <a href="{{ url_for('asset.asset_list', status='expiring') }}" class="action-btn">
-                    <div class="action-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div>
-                        <div class="fw-semibold">View Expiring</div>
-                        <small class="text-muted">{{ expiring_count }} assets expiring soon</small>
-                    </div>
-                </a>
-                
-                <a href="{{ url_for('asset.asset_list', status='expired') }}" class="action-btn">
-                    <div class="action-icon">
-                        <i class="fas fa-exclamation"></i>
-                    </div>
-                    <div>
-                        <div class="fw-semibold">Handle Expired</div>
-                        <small class="text-muted">{{ expired_count }} expired warranties</small>
-                    </div>
-                </a>
-                
-                <a href="{{ url_for('asset.export_assets') }}" class="action-btn">
-                    <div class="action-icon">
-                        <i class="fas fa-download"></i>
-                    </div>
-                    <div>
-                        <div class="fw-semibold">Export Data</div>
-                        <small class="text-muted">Download asset report</small>
-                    </div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Row -->
+    <!-- Asset Response Summary (will be populated by JavaScript if there are responses) -->
+    <div id="responseSummaryRow" class="row g-4 mb-4" style="display: none;">
+        <div class="col-12">
+            <div class="response-summary-card">
+                <div class="p-3 border-bottom">
+                    <h3 class="section-title mb-0">
+                        <i class="fas fa-chart-pie"></i>
+                        <span id="summaryYear">{{ current_year }}</span> Asset Response Summary
+                    </h3>
+                </div>
+                <div class="p-3">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>About Asset Responses:</strong> This tracks unique assets that have received responses, 
+                        showing the latest response per asset. Assets can have their responses updated/changed.
+                    </div>
+                    <div class="row" id="responseSummaryContent">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <span id="assetsExpiringThisYear">-</span> assets expiring this year
+                                </span>
+                                <span class="text-muted">
+                                    <i class="fas fa-reply me-1"></i>
+                                    <span id="totalAssetsWithResponses">-</span> assets with responses
+                                </span>
+                            </div>
+                            <div class="progress-custom">
+                                <div class="progress-bar-custom" id="responseProgressBar" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">Percentage of expiring assets with responses</small>
+                                <small class="fw-bold text-primary" id="responsePercentage">0%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Assets Row -->
     <div class="row g-4">
-        <!-- Recent Activity Timeline -->
-        <div class="col-lg-8">
-            <div class="activity-timeline">
-                <h3 class="section-title p-3 mb-0">Recent Asset Activity</h3>
+        <div class="col-12">
+            <div class="activity-card">
+                <div class="p-3 border-bottom">
+                    <h3 class="section-title mb-0">
+                        <i class="fas fa-clock"></i>
+                        Recently Expired or Expiring Soon
+                    </h3>
+                </div>
                 {% if recent_assets %}
                     {% for asset in recent_assets %}
-                    <div class="timeline-item">
-                        <div class="timeline-dot {% if asset.status == 'Expired' %}danger{% elif asset.status == 'Expiring Soon' %}warning{% else %}active{% endif %}"></div>
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">
-                                    <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="text-decoration-none">
-                                        {{ asset.product_name }}
-                                    </a>
-                                </h6>
-                                <p class="text-muted mb-1">{{ asset.product_model or 'No model specified' }}</p>
-                                <small class="text-muted">
-                                    {% if asset.days_remaining > 0 %}
-                                        Expires in {{ asset.days_remaining }} days
-                                    {% elif asset.days_remaining == 0 %}
-                                        Expires today
-                                    {% else %}
-                                        Expired {{ asset.days_remaining|abs }} days ago
-                                    {% endif %}
-                                </small>
+                    <div class="asset-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <div class="fw-bold">{{ asset.product_name }}</div>
+                                <div class="text-muted small">{{ asset.product_model or 'No model specified' }}</div>
                             </div>
-                            <div class="text-end">
-                                <span class="badge {% if asset.status == 'Expired' %}bg-danger{% elif asset.status == 'Expiring Soon' %}bg-warning{% else %}bg-success{% endif %}">
-                                    {{ asset.status }}
+                            <div class="col-md-2">
+                                <div class="text-muted small">Purchase Date</div>
+                                <div>{{ asset.purchase_date.strftime('%Y-%m-%d') }}</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="text-muted small">Expiration Date</div>
+                                <div>{{ asset.warranty_expiry_date.strftime('%Y-%m-%d') }}</div>
+                            </div>
+                            <div class="col-md-2">
+                                {% if asset.status == 'Active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif asset.status == 'Expiring Soon' %}
+                                <span class="badge bg-warning">Expiring Soon ({{ asset.days_remaining }} days)</span>
+                                {% else %}
+                                <span class="badge bg-danger">Expired</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2">
+                                <span class="badge {% if asset.notifications_enabled %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {% if asset.notifications_enabled %}Enabled{% else %}Disabled{% endif %}
                                 </span>
-                                <div class="text-muted small mt-1">
-                                    {{ asset.warranty_expiry_date.strftime('%m/%d/%Y') }}
-                                </div>
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <a href="{{ url_for('asset.asset_detail', asset_id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
-                <div class="p-4 text-center">
+                <div class="p-5 text-center">
                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
                     <h5>All warranties are in good standing</h5>
                     <p class="text-muted">No assets require immediate attention</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Notification Responses Widget -->
-        <div class="col-lg-4">
-            <div class="response-widget">
-                <h3 class="section-title p-3 mb-0">Notification Responses ({{ current_year }})</h3>
-                {% if total_responses > 0 %}
-                    <div class="response-item">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-sync-alt text-success me-2"></i>
-                            <span>Renewed</span>
-                        </div>
-                        <span class="response-badge badge-renewed">{{ notification_responses.renewed }}</span>
-                    </div>
-                    <div class="response-item">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-clock text-warning me-2"></i>
-                            <span>Pending</span>
-                        </div>
-                        <span class="response-badge badge-pending">{{ notification_responses.pending }}</span>
-                    </div>
-                    <div class="response-item">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-times text-danger me-2"></i>
-                            <span>Won't Renew</span>
-                        </div>
-                        <span class="response-badge badge-not-renew">{{ notification_responses.will_not_renew }}</span>
-                    </div>
-                    <div class="response-item">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-bell-slash text-muted me-2"></i>
-                            <span>Disabled</span>
-                        </div>
-                        <span class="response-badge badge-disabled">{{ notification_responses.disable_notifications }}</span>
-                    </div>
-                    <div class="response-item bg-light">
-                        <div class="d-flex align-items-center fw-semibold">
-                            <i class="fas fa-chart-bar text-primary me-2"></i>
-                            <span>Response Rate</span>
-                        </div>
-                        <span class="fw-semibold text-primary">
-                            {{ "%.1f"|format((total_responses / assets_expiring_this_year * 100) if assets_expiring_this_year > 0 else 0) }}%
-                        </span>
-                    </div>
-                {% else %}
-                <div class="p-4 text-center">
-                    <i class="fas fa-bell-slash text-muted fa-2x mb-3"></i>
-                    <p class="text-muted mb-0">No notification responses yet</p>
                 </div>
                 {% endif %}
             </div>
@@ -468,186 +469,302 @@
 
 {% block js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Update current time
-    function updateTime() {
-        const now = new Date();
-        const options = { 
-            weekday: 'short', 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric',
-            hour: '2-digit', 
-            minute: '2-digit'
-        };
-        document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
-    }
-    
-    updateTime();
-    setInterval(updateTime, 60000);
-    
-    // Load status overview chart
-    loadStatusChart();
-    
-    // Load expiration timeline chart
-    loadTimelineChart();
-});
-
-function loadStatusChart() {
-    const ctx = document.getElementById('statusChart').getContext('2d');
-    
-    const goodStanding = {{ good_standing_count }};
-    const expiring = {{ expiring_count }};
-    const expired = {{ expired_count }};
-    const total = {{ total_count }};
-    
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Warranty Status Distribution'],
-            datasets: [
-                {
-                    label: 'Good Standing',
-                    data: [goodStanding],
-                    backgroundColor: '#28a745',
-                    borderRadius: 8,
-                    barThickness: 60
-                },
-                {
-                    label: 'Expiring Soon',
-                    data: [expiring],
-                    backgroundColor: '#ffc107',
-                    borderRadius: 8,
-                    barThickness: 60
-                },
-                {
-                    label: 'Expired',
-                    data: [expired],
-                    backgroundColor: '#dc3545',
-                    borderRadius: 8,
-                    barThickness: 60
-                }
-            ]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'center',
-                    labels: {
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        padding: 20,
-                        font: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        color: '#495057'
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const percentage = total > 0 ? ((context.parsed.x / total) * 100).toFixed(1) : 0;
-                            return `${context.dataset.label}: ${context.parsed.x} (${percentage}%)`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    stacked: true,
-                    beginAtZero: true,
-                    max: total > 0 ? total : 10,
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        display: false
-                    }
-                },
-                y: {
-                    stacked: true,
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        display: false
-                    }
-                }
-            },
-            layout: {
-                padding: 10
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit'
+            };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
         }
-    });
-}
-
-function loadTimelineChart() {
-    fetch('/api/dashboard/expiration-timeline')
-        .then(response => response.json())
-        .then(data => {
-            const ctx = document.getElementById('timelineChart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(item => item.month),
-                    datasets: [{
-                        label: 'Warranties Expiring',
-                        data: data.map(item => item.count),
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#667eea',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+        
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // Load notification response data
+        loadNotificationResponseData();
+        
+        // Load timeline data with AJAX
+        fetch('/api/dashboard/expiration-timeline')
+            .then(response => response.json())
+            .then(data => {
+                const months = data.map(item => item.month);
+                const counts = data.map(item => item.count);
+                
+                // Expiration Timeline Chart
+                const timelineChartCtx = document.getElementById('expirationTimelineChart').getContext('2d');
+                const timelineChart = new Chart(timelineChartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Warranties Expiring',
+                            data: counts,
+                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0,0,0,0.05)'
-                            },
-                            ticks: {
-                                precision: 0,
-                                color: '#6c757d'
-                            }
-                        },
-                        x: {
-                            grid: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
                                 display: false
                             },
-                            ticks: {
-                                color: '#6c757d'
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleColor: 'white',
+                                bodyColor: 'white',
+                                borderColor: '#667eea',
+                                borderWidth: 1,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0,
+                                    color: '#6c757d'
+                                },
+                                grid: {
+                                    color: 'rgba(0,0,0,0.05)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#6c757d'
+                                },
+                                grid: {
+                                    display: false
+                                }
                             }
                         }
                     }
-                }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading timeline data:', error);
+                const timelineContainer = document.getElementById('expirationTimelineChart').parentElement;
+                timelineContainer.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-exclamation-triangle me-2"></i>Error loading timeline data</div>';
             });
-        })
-        .catch(error => {
-            console.error('Error loading timeline chart:', error);
-            document.getElementById('timelineChart').parentElement.innerHTML = 
-                '<div class="text-center py-5"><i class="fas fa-chart-line text-muted fa-3x mb-3"></i><p class="text-muted">Chart data unavailable</p></div>';
-        });
-}
+    });
+    
+    function loadNotificationResponseData() {
+        const container = document.getElementById('notificationResponseContainer');
+        
+        fetch('/api/dashboard/notification-responses')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Asset response data:', data);
+                
+                if (data.total > 0) {
+                    // Create proper container structure
+                    container.innerHTML = `
+                        <div class="d-flex flex-column h-100 w-100">
+                            <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                                <canvas id="notificationResponseChart" style="max-height: 220px; width: 100%;"></canvas>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-cubes me-1"></i>
+                                    ${data.total} assets with responses
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Filter out zero values and create corresponding labels
+                    const nonZeroData = [];
+                    const nonZeroLabels = [];
+                    const nonZeroColors = [];
+                    const nonZeroBorderColors = [];
+                    
+                    const allData = [
+                        { label: 'Renewed', value: data.responses.renewed, bg: 'rgba(40, 167, 69, 0.8)', border: 'rgba(40, 167, 69, 1)' },
+                        { label: 'Will Not Renew', value: data.responses.will_not_renew, bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' },
+                        { label: 'Pending', value: data.responses.pending, bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' },
+                        { label: 'Disabled Notifications', value: data.responses.disable_notifications, bg: 'rgba(108, 117, 125, 0.8)', border: 'rgba(108, 117, 125, 1)' }
+                    ];
+                    
+                    // Only include non-zero values
+                    allData.forEach(item => {
+                        if (item.value > 0) {
+                            nonZeroData.push(item.value);
+                            nonZeroLabels.push(item.label);
+                            nonZeroColors.push(item.bg);
+                            nonZeroBorderColors.push(item.border);
+                        }
+                    });
+                    
+                    // Create the chart
+                    const responseChartCtx = document.getElementById('notificationResponseChart').getContext('2d');
+                    const responseChart = new Chart(responseChartCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: nonZeroLabels,
+                            datasets: [{
+                                data: nonZeroData,
+                                backgroundColor: nonZeroColors,
+                                borderColor: nonZeroBorderColors,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            size: 11
+                                        },
+                                        padding: 15,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0,0,0,0.8)',
+                                    titleColor: 'white',
+                                    bodyColor: 'white',
+                                    borderColor: '#667eea',
+                                    borderWidth: 1,
+                                    cornerRadius: 8,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = data.total;
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                            return `${label}: ${value} assets (${percentage}%)`;
+                                        },
+                                        title: function(context) {
+                                            return 'Asset Responses ' + data.year;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Show and populate summary cards
+                    showResponseSummary(data);
+                } else {
+                    // Show empty state with better messaging
+                    const expiringAssetsCount = data.assets_expiring_this_year || 0;
+                    container.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-chart-pie fa-3x mb-3 opacity-50"></i>
+                            <p><strong>No asset responses yet this year</strong></p>
+                            <small>
+                                ${expiringAssetsCount > 0 
+                                    ? `${expiringAssetsCount} assets expiring this year - responses will appear here when users respond to warranty alerts` 
+                                    : 'No assets expiring this year'
+                                }
+                            </small>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading asset response data:', error);
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Error loading response data</p>
+                        <small>Please try refreshing the page</small>
+                    </div>
+                `;
+            });
+    }
+
+    function showResponseSummary(data) {
+        const summaryRow = document.getElementById('responseSummaryRow');
+        const summaryContent = document.getElementById('responseSummaryContent');
+        const summaryYear = document.getElementById('summaryYear');
+        const assetsExpiringSpan = document.getElementById('assetsExpiringThisYear');
+        const totalResponsesSpan = document.getElementById('totalAssetsWithResponses');
+        const progressBar = document.getElementById('responseProgressBar');
+        const percentageSpan = document.getElementById('responsePercentage');
+        
+        summaryYear.textContent = data.year;
+        assetsExpiringSpan.textContent = data.assets_expiring_this_year || 0;
+        totalResponsesSpan.textContent = data.total;
+        
+        // Calculate response percentage
+        const responsePercentage = data.assets_expiring_this_year > 0 
+            ? ((data.total / data.assets_expiring_this_year) * 100).toFixed(1)
+            : 0;
+        
+        progressBar.style.width = `${Math.min(responsePercentage, 100)}%`;
+        percentageSpan.textContent = `${responsePercentage}%`;
+        
+        summaryContent.innerHTML = `
+            <div class="col-md-3">
+                <div class="response-item">
+                    <div class="d-flex align-items-center">
+                        <div class="response-icon bg-renewed">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-success">${data.responses.renewed}</div>
+                            <div class="text-muted small">Assets Renewed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="response-item">
+                    <div class="d-flex align-items-center">
+                        <div class="response-icon bg-not-renew">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-danger">${data.responses.will_not_renew}</div>
+                            <div class="text-muted small">Will Not Renew</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="response-item">
+                    <div class="d-flex align-items-center">
+                        <div class="response-icon bg-pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-warning">${data.responses.pending}</div>
+                            <div class="text-muted small">Pending Decision</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="response-item">
+                    <div class="d-flex align-items-center">
+                        <div class="response-icon bg-disabled">
+                            <i class="fas fa-bell-slash"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-secondary">${data.responses.disable_notifications}</div>
+                            <div class="text-muted small">Notifications Disabled</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        summaryRow.style.display = 'block';
+    }
 </script>
 {% endblock %}
