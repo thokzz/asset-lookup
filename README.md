@@ -45,7 +45,7 @@ If my work helped you, consider buying me a coffee! ☕
 ### Dashboard & Overview
 <div align="center">
   <img src="screenshots/Asset Dashboard.png" alt="Asset Dashboard" width="800"/>
-  <p><em>Main asset dashboard showing warranty status overview and expiring assets</em></p>
+  <p><em>Main Asset Dashboard showing warranty status overview and expiring assets</em></p>
 </div>
 
 <div align="center">
