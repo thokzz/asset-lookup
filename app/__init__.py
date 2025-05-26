@@ -143,6 +143,7 @@ def create_app():
     from app.routes.notification import notification
     from app.routes.static_pages import static_pages
     from app.routes.oidc_auth import oidc_auth
+    from app.routes.backup import backup  # Add this import
     
     app.register_blueprint(static_pages)    
     app.register_blueprint(auth)
@@ -151,6 +152,7 @@ def create_app():
     app.register_blueprint(api)
     app.register_blueprint(notification)
     app.register_blueprint(oidc_auth)
+    app.register_blueprint(backup)  # Add this line
     
     # Error handlers
     @app.errorhandler(404)
@@ -174,6 +176,16 @@ def create_app():
             from app.utils.scheduler import setup_scheduler
             setup_scheduler(app, scheduler)
             
+            try:
+                from app.utils.backup_scheduler import setup_backup_scheduler
+                setup_backup_scheduler(app, scheduler)
+                app.logger.info("✅ Backup scheduler initialized successfully")
+                
+            except Exception as e:
+                app.logger.error(f"❌ Error setting up backup scheduler: {str(e)}")
+                import traceback
+                app.logger.error(traceback.format_exc())
+
             if not scheduler.running:
                 scheduler.start()
                 app.logger.info("✅ Scheduler started successfully")
