@@ -5,7 +5,14 @@ Copyright (c) 2025 - Toks Hernandez
 Permission is granted to individuals and organizations to use this software under the following conditions:
 
 1. Non-Commercial Use Only
-This software is provided for personal, educational, or non-commercial use only. Use in any commercial context — including but not limited to SaaS platforms, internal enterprise tools, or monetized products — is prohibited without a separate commercial license.
+This software is provided for personal, educational, or non-commercial use only. Use in any commercial context — including but not limited to SaaS platforms or monetized products — is prohibited without a separate commercial license.
+Permitted Uses
+* Personal use
+* Educational use
+* Research and development
+* Non-profit organizations
+* Government use
+* Internal business use (non-commercial)
 
 
 2. No Modification or Derivative Works
@@ -13,7 +20,7 @@ You may not modify, adapt, reverse engineer, decompile, or create derivative wor
 
 
 3. No Redistribution
-You may not redistribute this software or host it in public repositories, package managers, or other distribution channels.
+You may not redistribute this software or host it in public repositories, package managers, or other distribution channels - unless given permission by the developer - contact thokzz.github@gmail.com.
 
 
 4. Copyright and Attribution
