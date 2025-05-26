@@ -65,6 +65,14 @@ If my work helped you, consider buying me a coffee! ☕
   <p><em>User management interface with role-based permissions</em></p>
 </div>
 
+### SSO management
+<div align="center">
+  <img src="screenshots/SSO Settings.png" alt="User Management" width="800"/>
+  <p><em>SSO Integration</em></p>
+</div>
+
+### Group management
+
 <div align="center">
   <img src="screenshots/Group Management.png" alt="Group Management" width="800"/>
   <p><em>Group management for organizing users and permissions</em></p>
@@ -130,6 +138,11 @@ If my work helped you, consider buying me a coffee! ☕
   <p><em>Comprehensive audit logging for compliance and security monitoring</em></p>
 </div>
 
+### Database Backup Settings
+<div align="center">
+  <img src="screenshots/Database Backup Settings.png" alt="Audit Logs" width="800"/>
+  <p><em>Comprehensive database settings</em></p>
+</div>
 ---
 
 ## 🏗️ Architecture
