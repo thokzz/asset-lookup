@@ -1,0 +1,701 @@
+<!-- app/templates/admin/backup.html - Fixed version -->
+{% extends 'layout.html' %}
+
+{% block title %}Database Backup Management{% endblock %}
+
+{% block css %}
+<style>
+.backup-card {
+    border-left: 4px solid #007bff;
+}
+.backup-file {
+    background: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s;
+}
+.backup-file:hover {
+    background: #e9ecef;
+}
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+}
+.danger-zone {
+    border: 2px solid #dc3545;
+    border-radius: 5px;
+    background: #fff5f5;
+}
+.success-zone {
+    border: 2px solid #28a745;
+    border-radius: 5px;
+    background: #f8fff8;
+}
+.backup-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-database me-2"></i> Database Backup Management
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-success" onclick="createBackup()">
+                <i class="fas fa-plus me-1"></i> Create Backup Now
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshStatus()">
+                <i class="fas fa-sync me-1"></i> Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Backups</h6>
+                        <h2 class="mt-2 mb-0" id="total-backups">{{ stats.total_backups }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-archive fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0 text-muted">Total Size</h6>
+                        <h4 class="mt-2 mb-0" id="total-size">{{ stats.total_size_formatted }}</h4>
+                    </div>
+                    <div>
+                        <i class="fas fa-hdd fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0 text-muted">Latest Backup</h6>
+                        <div class="mt-2" id="newest-backup">
+                            {% if stats.newest_backup %}
+                            <small>{{ stats.newest_backup }}</small>
+                            {% else %}
+                            <small class="text-muted">No backups</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <i class="fas fa-clock fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0 text-muted">Auto Backup</h6>
+                        <div class="mt-2">
+                            <span class="badge {% if settings.auto_backup_enabled %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if settings.auto_backup_enabled %}Enabled{% else %}Disabled{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <i class="fas fa-robot fa-2x {% if settings.auto_backup_enabled %}text-success{% else %}text-secondary{% endif %}"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Backup Settings -->
+    <div class="col-md-6">
+        <div class="card backup-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i> Backup Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('backup.update_backup_settings') }}" id="settingsForm">
+                    <div class="mb-3">
+                        <label for="backup_path" class="form-label">Backup Directory Path</label>
+                        <input type="text" class="form-control" id="backup_path" name="backup_path" 
+                               value="{{ settings.backup_path }}" required>
+                        <div class="form-text">
+                            Directory where backup files will be stored. Must be writable by the application.
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_format" class="form-label">Date/Time Format</label>
+                                <select class="form-select" id="date_format" name="date_format">
+                                    <option value="%Y%m%d_%H%M%S" {% if settings.date_format == '%Y%m%d_%H%M%S' %}selected{% endif %}>
+                                        YYYYMMDD_HHMMSS (20241201_143022)
+                                    </option>
+                                    <option value="%Y-%m-%d_%H-%M-%S" {% if settings.date_format == '%Y-%m-%d_%H-%M-%S' %}selected{% endif %}>
+                                        YYYY-MM-DD_HH-MM-SS (2024-12-01_14-30-22)
+                                    </option>
+                                    <option value="%Y%m%d" {% if settings.date_format == '%Y%m%d' %}selected{% endif %}>
+                                        YYYYMMDD (20241201)
+                                    </option>
+                                    <option value="%Y-%m-%d" {% if settings.date_format == '%Y-%m-%d' %}selected{% endif %}>
+                                        YYYY-MM-DD (2024-12-01)
+                                    </option>
+                                </select>
+                                <div class="form-text">Format for timestamp in backup filenames</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rotation_days" class="form-label">Rotation Period (Days)</label>
+                                <input type="number" class="form-control" id="rotation_days" name="rotation_days" 
+                                       value="{{ settings.rotation_days }}" min="1" max="45" required>
+                                <div class="form-text">Keep backups for this many days (max 45)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="name_format" class="form-label">Backup Filename Format</label>
+                        <input type="text" class="form-control" id="name_format" name="name_format" 
+                               value="{{ settings.name_format }}" required>
+                        <div class="form-text">
+                            Use {date} as placeholder for timestamp. 
+                            <strong>Example:</strong> <span id="filename-preview">{{ settings.name_format.replace('{date}', '20241201_143022') }}.db</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="compression_enabled" name="compression_enabled" 
+                                       {% if settings.compression_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="compression_enabled">
+                                    <strong>Enable Compression</strong>
+                                </label>
+                                <div class="form-text">Compress backup files to save space (.gz)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="auto_backup_enabled" name="auto_backup_enabled" 
+                                       {% if settings.auto_backup_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="auto_backup_enabled">
+                                    <strong>Enable Auto Backup</strong>
+                                </label>
+                                <div class="form-text">Automatically create scheduled backups</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="autoBackupSettings" style="display: {% if settings.auto_backup_enabled %}block{% else %}none{% endif %};">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="backup_schedule" class="form-label">Backup Schedule</label>
+                                <select class="form-select" id="backup_schedule" name="backup_schedule">
+                                    <option value="daily" {% if settings.backup_schedule == 'daily' %}selected{% endif %}>Daily</option>
+                                    <option value="weekly" {% if settings.backup_schedule == 'weekly' %}selected{% endif %}>Weekly</option>
+                                    <option value="hourly" {% if settings.backup_schedule == 'hourly' %}selected{% endif %}>Hourly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="backup_time" class="form-label">Backup Time</label>
+                                <input type="time" class="form-control" id="backup_time" name="backup_time" 
+                                       value="{{ settings.backup_time }}">
+                                <div class="form-text">Time of day for scheduled backups</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Latest Backup:</strong> The most recent backup is always saved as 
+                        <code>asset_lookup.db</code> in the backup directory for easy access.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Save Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Backup Management -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i> Recent Backups
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="cleanupBackups()">
+                    <i class="fas fa-broom me-1"></i> Cleanup Old
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="recent-backups">
+                    {% if recent_backups %}
+                        {% for backup in recent_backups %}
+                        <div class="backup-file">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">
+                                        <i class="fas fa-file-archive me-2{% if backup.is_compressed %} text-info{% endif %}"></i>
+                                        {{ backup.filename }}
+                                        {% if backup.is_compressed %}
+                                        <span class="badge bg-info ms-2">Compressed</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ backup.created_formatted }} • {{ backup.size_formatted }}
+                                    </div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="restoreBackup('{{ backup.filename }}')">
+                                                <i class="fas fa-undo me-2"></i> Restore
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" onclick="deleteBackup('{{ backup.filename }}')">
+                                                <i class="fas fa-trash me-2"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-folder-open fa-3x mb-3"></i>
+                            <p>No backups found</p>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="createBackup()">
+                                Create Your First Backup
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card mt-4 danger-zone">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Danger Zone
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Database Restore Operations</h6>
+                <p class="text-muted small">
+                    Restoring a backup will replace your current database. This action cannot be undone.
+                    A backup of the current database will be created before restoration.
+                </p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> Always ensure your application is not actively being used during restore operations.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Zone for Information -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card success-zone">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i> Backup Best Practices
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-shield-alt me-2 text-success"></i> Safety Tips</h6>
+                        <ul class="small">
+                            <li>Keep multiple backup copies in different locations</li>
+                            <li>Test restore procedures regularly</li>
+                            <li>Monitor backup logs for errors</li>
+                            <li>Verify backup integrity after creation</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-clock me-2 text-info"></i> Scheduling</h6>
+                        <ul class="small">
+                            <li>Daily backups for production systems</li>
+                            <li>Schedule during low-usage periods</li>
+                            <li>Consider hourly backups for critical systems</li>
+                            <li>Keep 30-45 days of backup history</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-hdd me-2 text-warning"></i> Storage</h6>
+                        <ul class="small">
+                            <li>Use compression to save disk space</li>
+                            <li>Store backups on separate drives/servers</li>
+                            <li>Monitor available disk space</li>
+                            <li>Consider cloud storage for offsite backups</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Restore Confirmation Modal -->
+<div class="modal fade" id="restoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Confirm Database Restore
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>Warning:</strong> This will replace your current database with the backup.
+                </div>
+                <p>Are you sure you want to restore from backup: <strong id="restore-filename"></strong>?</p>
+                <p class="text-muted small">
+                    A backup of the current database will be created before restoration.
+                    This operation cannot be undone once completed.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{{ url_for('backup.restore_backup') }}" style="display: inline;">
+                    <input type="hidden" name="backup_filename" id="restore-backup-filename">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-undo me-2"></i> Restore Database
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash me-2"></i> Confirm Backup Deletion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the backup: <strong id="delete-filename"></strong>?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{{ url_for('backup.delete_backup') }}" style="display: inline;">
+                    <input type="hidden" name="backup_filename" id="delete-backup-filename">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i> Delete Backup
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cleanup Confirmation Modal -->
+<div class="modal fade" id="cleanupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-broom me-2"></i> Confirm Backup Cleanup
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This will delete all backups older than <strong>{{ settings.rotation_days }} days</strong>.</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{{ url_for('backup.cleanup_backups') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-broom me-2"></i> Cleanup Old Backups
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto backup toggle
+    const autoBackupToggle = document.getElementById('auto_backup_enabled');
+    const autoBackupSettings = document.getElementById('autoBackupSettings');
+    
+    autoBackupToggle.addEventListener('change', function() {
+        autoBackupSettings.style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Filename preview updater
+    const dateFormat = document.getElementById('date_format');
+    const nameFormat = document.getElementById('name_format');
+    const filenamePreview = document.getElementById('filename-preview');
+    
+    function updateFilenamePreview() {
+        const format = nameFormat.value;
+        const now = new Date();
+        let dateStr = '';
+        
+        // Simple date formatting
+        switch(dateFormat.value) {
+            case '%Y%m%d_%H%M%S':
+                dateStr = now.getFullYear() + 
+                         String(now.getMonth() + 1).padStart(2, '0') + 
+                         String(now.getDate()).padStart(2, '0') + '_' +
+                         String(now.getHours()).padStart(2, '0') + 
+                         String(now.getMinutes()).padStart(2, '0') + 
+                         String(now.getSeconds()).padStart(2, '0');
+                break;
+            case '%Y-%m-%d_%H-%M-%S':
+                dateStr = now.getFullYear() + '-' + 
+                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(now.getDate()).padStart(2, '0') + '_' +
+                         String(now.getHours()).padStart(2, '0') + '-' + 
+                         String(now.getMinutes()).padStart(2, '0') + '-' + 
+                         String(now.getSeconds()).padStart(2, '0');
+                break;
+            case '%Y%m%d':
+                dateStr = now.getFullYear() + 
+                         String(now.getMonth() + 1).padStart(2, '0') + 
+                         String(now.getDate()).padStart(2, '0');
+                break;
+            case '%Y-%m-%d':
+                dateStr = now.getFullYear() + '-' + 
+                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                         String(now.getDate()).padStart(2, '0');
+                break;
+            default:
+                dateStr = 'formatted_date';
+        }
+        
+        const preview = format.replace('{date}', dateStr) + '.db';
+        filenamePreview.textContent = preview;
+    }
+    
+    dateFormat.addEventListener('change', updateFilenamePreview);
+    nameFormat.addEventListener('input', updateFilenamePreview);
+    
+    // Initial preview update
+    updateFilenamePreview();
+    
+    // Auto-refresh status every 30 seconds
+    setInterval(refreshStatus, 30000);
+});
+
+// Function to create backup
+function createBackup() {
+    if (confirm('Create a new database backup now? This may take a few moments.')) {
+        showBackupStatus('Creating backup...', 'info');
+        
+        fetch('{{ url_for("backup.create_backup") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                showBackupStatus('Backup creation started successfully!', 'success');
+                setTimeout(refreshStatus, 2000); // Refresh after 2 seconds
+            } else {
+                showBackupStatus('Failed to start backup creation.', 'danger');
+            }
+        })
+        .catch(error => {
+            showBackupStatus('Error starting backup: ' + error.message, 'danger');
+        });
+    }
+}
+
+// Function to refresh status
+function refreshStatus() {
+    fetch('{{ url_for("backup.backup_status") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update statistics
+                document.getElementById('total-backups').textContent = data.stats.total_backups;
+                document.getElementById('total-size').textContent = data.stats.total_size_formatted;
+                
+                const newestBackup = document.getElementById('newest-backup');
+                if (data.stats.newest_backup) {
+                    newestBackup.innerHTML = '<small>' + data.stats.newest_backup + '</small>';
+                } else {
+                    newestBackup.innerHTML = '<small class="text-muted">No backups</small>';
+                }
+                
+                // Update recent backups list
+                updateRecentBackupsList(data.recent_backups);
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing status:', error);
+        });
+}
+
+// Function to update recent backups list
+function updateRecentBackupsList(backups) {
+    const container = document.getElementById('recent-backups');
+    
+    if (backups.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-folder-open fa-3x mb-3"></i>
+                <p>No backups found</p>
+                <button type="button" class="btn btn-primary btn-sm" onclick="createBackup()">
+                    Create Your First Backup
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    backups.forEach(backup => {
+        html += `
+            <div class="backup-file">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold">
+                            <i class="fas fa-file-archive me-2${backup.is_compressed ? ' text-info' : ''}"></i>
+                            ${backup.filename}
+                            ${backup.is_compressed ? '<span class="badge bg-info ms-2">Compressed</span>' : ''}
+                        </div>
+                        <div class="text-muted small">
+                            ${backup.created} • ${backup.size}
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown">
+                            Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="restoreBackup('${backup.filename}')">
+                                    <i class="fas fa-undo me-2"></i> Restore
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" onclick="deleteBackup('${backup.filename}')">
+                                    <i class="fas fa-trash me-2"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+
+// Function to show backup status
+function showBackupStatus(message, type) {
+    // Create status alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show backup-status`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Remove existing status alerts
+    const existing = document.querySelectorAll('.backup-status');
+    existing.forEach(el => el.remove());
+    
+    // Add new alert
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Function to restore backup
+function restoreBackup(filename) {
+    document.getElementById('restore-filename').textContent = filename;
+    document.getElementById('restore-backup-filename').value = filename;
+    new bootstrap.Modal(document.getElementById('restoreModal')).show();
+}
+
+// Function to delete backup
+function deleteBackup(filename) {
+    document.getElementById('delete-filename').textContent = filename;
+    document.getElementById('delete-backup-filename').value = filename;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// Function to cleanup backups
+function cleanupBackups() {
+    new bootstrap.Modal(document.getElementById('cleanupModal')).show();
+}
+</script>
+{% endblock %}
