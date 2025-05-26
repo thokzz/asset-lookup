@@ -12,6 +12,7 @@ services:
       - ./uploads:/app/app/static/uploads
       - ./logs:/app/logs
       - ./instance:/app/instance  # Ensure this line exists
+      - ./backups:/app/backups
     environment:
       - FLASK_APP=run.py
       - DATABASE_URL=sqlite:////app/instance/asset_lookup.db
