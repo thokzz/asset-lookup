@@ -867,6 +867,48 @@ def delete_tag(tag_id):
     flash('Tag deleted successfully!', 'success')
     return redirect(url_for('asset.tag_list'))
 
+@asset.route('/assets/<asset_id>/files/<file_id>/preview')
+@login_required
+def preview_file(asset_id, file_id):
+    try:
+        # Check if user can access this asset
+        accessible_assets = current_user.get_accessible_assets()
+        asset = accessible_assets.filter(Asset.id == asset_id).first_or_404()
+        
+        file = AssetFile.query.get_or_404(file_id)
+        
+        # Check if file belongs to the asset
+        if file.asset_id != asset.id:
+            flash('File not found.', 'danger')
+            return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+        
+        # Check if preview is supported
+        supported_types = [
+            'application/pdf',
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'
+        ]
+        
+        if file.file_type not in supported_types:
+            flash('Preview not supported for this file type.', 'warning')
+            return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+        
+        # Serve the file for preview
+        from flask import send_file
+        import os
+        
+        full_file_path = os.path.join(current_app.root_path, file.file_path)
+        
+        if not os.path.exists(full_file_path):
+            flash('File not found in storage.', 'danger')
+            return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+        
+        return send_file(full_file_path, mimetype=file.file_type)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error previewing file: {str(e)}")
+        flash('Error previewing file.', 'danger')
+        return redirect(url_for('asset.asset_detail', asset_id=asset.id))
+
 @asset.route('/assets/<asset_id>/files/<file_id>/delete', methods=['POST'])
 @login_required
 def delete_file(asset_id, file_id):
